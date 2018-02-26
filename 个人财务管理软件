@@ -11,17 +11,6 @@
 #include<time.h>
 #define N sizeof(struct Account)   //宏定义 
 #define M sizeof(struct income_and_expenditure)
-/*void color(short x)
-{
-	if(x>=0&&x<=15)
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
-	}
-	else
-	{
-		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
-	}
-} */ 
 
 struct income_and_expenditure      //收支情况 
 {
@@ -56,6 +45,7 @@ void login();                 // 注册账号
 void logon();                  // 账号登陆  
 void menu();                 //菜单 
 void over();                  //退出系统 
+void color(short x);                 //控制颜色 
 void HideCursor();          //隐藏光标
 void toxy(int x, int y);    //将光标移动到X,Y坐标处
 void amend_password();         //修改密码 
@@ -70,6 +60,18 @@ void save_information(IAEP p); //保存信息
 
 char _name[20],_password[18];       //全局变量记住当前登陆账户 
 
+
+void color(short x)
+{
+	if(x>=0&&x<=15)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
+	}
+	else
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
+	}
+} 
 
 void HideCursor()     //隐藏光标
 {
@@ -121,10 +123,7 @@ void menu()     //菜单
 {
 	system("cls");    //清屏 
 	system("color 70");
-	//color(6);     //看着舒服的颜色 
-	//SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),4|8|32|128);
 	do{
-		system("color 70");
 		char t;
 		toxy(50,5);
 		printf(" 个人财务管理软件");
@@ -148,7 +147,7 @@ void menu()     //菜单
 		switch(t)
 		{
 			case '1':add_information();break;
-			case '2':;break;
+			case '2':amend_information();break;
 			case '3':delete_information();break;
 			case '4':print_information();break;
 			case '5':find_information();break;
@@ -162,17 +161,17 @@ void menu()     //菜单
 void signin()       //登陆或注册 
 {
 	system("cls");
-	system("color 71");
 	HideCursor();    //隐藏光标
 	char t;
+	color(2);
 	toxy(50,5);
 	printf("个人财务管理软件");
 	toxy(44,8);
-	printf("----------------------------");
+	printf("****************************");
 	toxy(45,10);
 	printf("请输入（1：登陆；2：注册.)");
 	toxy(44,12);
-	printf("----------------------------");
+	printf("****************************");
 	while(1)
 	{
 		t=getch();
@@ -188,15 +187,15 @@ void signin()       //登陆或注册
 void logon()      // 账号登陆 
 {
 	system("cls");
-	system("color 72");
 	HideCursor();
 	Accp p,head;
 	head=ff();
     do{
     	HideCursor();       //隐藏光标 
+    	color(12);
 	    p=head;
 	    char t,c,k;
-	    int i=0;;
+	    int i=0;
 		toxy(50,5);
 		printf("个人财务管理软件");
 		toxy(45,6);
@@ -329,12 +328,12 @@ void logon()      // 账号登陆
 void login()        //注册账号 
 {
 	system("cls");
-	system("color 73");
 	HideCursor();       //隐藏光标 
 	Accp p1;
 	p1=(Accp)malloc(N);     //向内存申请一段空间 
 	do{
 		HideCursor();
+		color(11);
 		char name[20],password[18],againpassword[18],c,k;
 		int i=0;; 
 		toxy(50,5);
@@ -630,7 +629,7 @@ IAEP ss()             //将存账单的文件里的内容输出到链表中
 	int n=0; 
 	IAEP head=NULL;
 	IAEP p,p2,pr=NULL;
-	fp=fopen(_name,"r");//打开文件，方式为只读 
+	fp=fopen(_name,"rb");//打开文件，方式为只读 
 	if(fp==NULL)            //如果打开为空 
 	{
 		printf("cannot open file\n");
@@ -735,7 +734,7 @@ void print_information()     //输出账单
 	float sum=0,sum1=0,sum2=0;
 	IAEP head=NULL;
 	IAEP p,p2,pr=NULL;
-	fp=fopen(_name,"r");//打开文件，方式为只读 
+	fp=fopen(_name,"rb");//打开文件，方式为只读 
 	if(fp==NULL)            //如果打开为空 
 	{
 		printf("cannot open file\n");
@@ -759,6 +758,7 @@ void print_information()     //输出账单
 	    	p2->next=p;
 	    	p2=p;
 		}
+		//printf("%d.%d.%-12d%c%-24f%s\n",p->year,p->month,p->day,p->ch,p->iae,p->source_or_aim);
     }
     fclose(fp);             //关闭fp所指向的文件
     toxy(50,5);
@@ -1006,7 +1006,7 @@ void delete_information()    //删除信息
 		}
 		if(t=='1')                  
 		{                            
-			fp=fopen(_name,"w");                  //先清空原文件内容再将修改后的信息写入文件 
+			fp=fopen(_name,"wb");                  //先清空原文件内容再将修改后的信息写入文件 
 			if(fp==NULL)
 			{
 				printf("cannot open file\n");
@@ -1019,7 +1019,7 @@ void delete_information()    //删除信息
 			if(head!=NULL)                        //如果头指针不为空 
 			{
 				p=head->next;                //使p指向第二个结点 
-				fp=fopen(_name,"a");          // 打开文件，方式为追加 
+				fp=fopen(_name,"ab");          // 打开文件，方式为追加 
 				while(p!=NULL)                    //p不为空就执行循环体 
 				{
 					if(fwrite(p,M,1,fp)!=1)            //将p所指向的1个大小为N的数据结构写入fp所指向的文件 
@@ -1046,16 +1046,174 @@ void delete_information()    //删除信息
 }
 
 
-void amend_information()
+void amend_information()   //修改信息 
 {
-	
+	system("cls");         //清屏 
+	system("color 79");    //看着舒服的颜色 
+	HideCursor();          //隐藏光标，看着更舒服
+	IAEP p,head;
+	FILE *fp;
+	int i=15,j=0,c; 
+	int year,day,month,newyear,newday,newmonth;
+	char source_or_aim[50];
+	char ch,cc,t;
+	int aie;
+	head=ss();
+	p=head;
+	do
+	{
+		system("cls");
+		toxy(50,5);
+		printf("个人账户管理软件");
+		toxy(54,7);
+		printf("修改信息");
+		toxy(40,9);
+		printf("请输入您要修改的信息（输入年月日，空格隔开）：");
+		toxy(50,10);
+		scanf("%d%d%d",&year,&month,&day);
+		getchar();
+		toxy(30,12);
+		printf("----------------------------------------------------------------");
+		toxy(30,13);
+		printf("时     间          金   额                 收入来源或支出目的");
+		toxy(30,14);
+		printf("----------------------------------------------------------------");
+		i=15;j=0;
+		while(p!=NULL)   //将每个结点的p->num都赋为0，以免后面数据干扰 
+		{
+			p->num=0;
+			p=p->next;
+		}
+		p=head;      //重新让p指向head 
+		while(p!=NULL)
+		{
+			if(p->year==year&&p->month==month&&p->day==day)
+			{
+				toxy(30,i);
+				j++;
+			    printf("%d: %d.%d.%-12d%c%-24f%s\n",j,p->year,p->month,p->day,p->ch,p->iae,p->source_or_aim);
+			    p->num=j;      //给p->num赋值，即给满足搜索要求的结点编号 
+			    i++;
+			}
+			p=p->next;
+		}
+		if(j==0)                   //如果j=0，即没有进入前面的搜索循环，也就是没有找到相应的信息 
+		{ 
+			toxy(50,i);
+			printf("没有找到相应的信息！(按0返回，按1重新搜索)");
+			while(1)               //死循环是为了防止除0和1的其他按键干扰 
+			{
+				ch=getch();     
+				if(ch=='0')
+				{
+					menu();break;
+				}
+				else if(ch=='1')
+				{
+					break;
+				}
+			}
+			if(ch=='1')     //如果输入的ch等于1，则结束本次循环 
+			   continue;
+		}
+		while(1)
+		{
+			toxy(50,i);
+			printf("请输入您要修改的信息的标号：");
+			scanf("%d",&c);
+			getchar();
+			i++;  
+			if(c<=j)              //如果c<=j，即输入正确 
+			    break;
+			else if(c>j)         //否则，输入错误 
+			{
+				toxy(50,i);
+				printf("没有找到您所要修改的信息，请重新输入！");
+				i++;
+				Sleep(500);      //暂停0.5秒 
+			}
+		}
+		p=head;      //让p重新指向head，即第一个结点 
+		while(p!=NULL&&p->num!=c)    //遍历链表，寻找满足要求的结点 
+		{
+			p=p->next;
+		}
+		if(p!=NULL)      //如果寻找成功，进入修改部分 
+		{
+			system("cls");    //清屏 
+			toxy(44,8);
+			printf("请输入修改后的金额：");
+			scanf("%d",&aie);getchar();p->iae=aie;
+			toxy(44,10);
+			printf("请输入收支类型（-代表支出，+代表收入）：");
+			scanf("%c",&cc);getchar();p->ch=cc;
+			toxy(44,12);
+			printf("请输入时间（年 月 日）：");
+			scanf("%d%d%d",&newyear,&newmonth,&newday);getchar();
+			p->year=newyear;p->month=newmonth;p->day=newday;
+			toxy(44,14);
+			printf("请输入收入来源或支出目的：");
+			gets(source_or_aim);
+			strcpy(p->source_or_aim,source_or_aim);
+			toxy(46,16);
+			printf("-------------------------");
+			toxy(46,17);
+			printf("|                       |");
+			toxy(46,18);
+			printf("|     是否确认修改？    |");
+			toxy(46,19);
+			printf("| 1.确认         2.取消 |");
+			toxy(46,20);
+			printf("|                       |");
+			toxy(46,21);
+			printf("-------------------------");
+			while(1)    //死循环为防止其他按键干扰 
+			{
+				t=getch();
+				if(t=='1')
+				   break;
+				else if(t=='2')
+				{
+					menu();
+				}
+			 } 
+			 if(t=='1')  //如果t等于1，则跳出循环 
+			 {
+			 	break; 
+			 }
+		}
+	}while(1);
+	p=head;     //p重新指向头节点 
+	system("cls");
+	toxy(44,12);
+	printf("正在修改....");
+	fp=fopen(_name,"wb");   //打开文件的同时清除文件内的内容 
+	if(fp==NULL)
+	{
+		printf("cannot open file");
+	}
+	while(p!=NULL)
+	{
+		if(fwrite(p,M,1,fp)!=1)    //将p所指向的内容存入fp所指向的文件中 
+		{
+			printf("file write error\n");
+		}
+		p=p->next;
+	}
+	fclose(fp);     //关闭文件 
+	Sleep(500);
+	system("cls");
+	toxy(44,12);
+	printf("修改成功！正在自动跳转到主菜单....");
+	Sleep(500);
+	menu();
 }
 
 
 void save_information(IAEP p)    //保存信息 
 {
 	FILE *fp;       //文件指针 
-	fp=fopen(_name,"a");    //以追加的方式打开文件 
+	fp=fopen(_name,"ab");    //以追加的方式打开文件 
 	if(fp==NULL)
 	{
 		printf("cannot open file\n");
