@@ -1,0 +1,348 @@
+/* 足球比赛积分统计系统
+   作者：施瑞文
+   时间：2018.2
+*/ 
+ //为简单化，这里没有加上文件的操作 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include<windows.h>
+#include<conio.h>
+#define LEN sizeof(match)
+typedef struct football
+{
+	char name[20];//[足球]队名
+	int num[4];//num[0]为单支球队需比赛场数, num[1]为赢场数，num[2]为平场数，num[3]为负场数
+	int goal;//进球数
+	int lose;//失球数
+	int integral;//积分
+	int pure;//净胜球
+	struct football *next; 
+}match;
+void menu();//声明菜单函数 
+match *creat();//输入球队信息 
+void print(match *head);//排序 
+match *Add(match *head);//增加球队信息
+match *Amend(match *head);//修改球队信息 
+match *Del(match *head);//删除球队信息 
+void End();//退出该软件 
+
+int n=0;//记录节点长度 
+match *p2;
+
+void toxy(int x, int y)//将光标移动到X,Y坐标处
+{
+  COORD pos = { x , y };
+  HANDLE Out = GetStdHandle(STD_OUTPUT_HANDLE);
+  SetConsoleCursorPosition(Out, pos);
+}
+
+
+void menu()
+{
+	system("cls");//清屏 
+	system("color 72");//颜色 
+	toxy(30,6);
+	printf("--------------------MENU-----------------------\n");
+	toxy(30,8);
+	printf("|  1.   Record the information of this match  |\n");
+	toxy(30,10);
+	printf("|  2.   Add the information of this match     |\n");
+	toxy(30,12);
+	printf("|  3.   Check the information of this match   |\n");
+	toxy(30,14);
+	printf("|  4.   delete the information of the match   |\n");
+	toxy(30,16);
+	printf("|  5.   Amend the information of the match    |\n");
+	toxy(30,18);
+	printf("|  6.   End this operation                    |\n");
+	toxy(30,20);
+	printf("-----------------------------------------------\n");
+	toxy(30,22);
+	printf("What are you want to do ? Input please:");
+}
+
+match *creat()
+{
+	system("cls");//清屏 
+	system("color 74");//颜色 
+	int t,n=0;
+	match *head,*p1;
+	p2=p1=(match *)malloc(LEN);
+	head=NULL;
+	
+	/*录入足球队名，比赛场数，得、失 球数和进球积分*/ 
+	
+	/*输入第一个节点数据 */
+
+	printf("Enter the total number of the football teams:");//参赛的球队数量 
+	scanf("%d",&t);
+	
+	
+	
+	while(n!=t)
+	{
+		n++; 
+		printf("the name of team %d :",n);//球队名 
+	    scanf("%s",p1->name);
+	
+	    printf("team %d win round(s):",n);//该球队赢局场数 
+	    scanf("%d",&p1->num[1]);
+	
+	    printf("team %d draw round(s):",n);//该球队平局场数 
+	    scanf("%d",&p1->num[2]);
+	    printf("team %d goal:",n);
+	    scanf("%d",&p1->goal);
+	    printf("team %d lose:",n);
+	    scanf("%d",&p1->lose);
+	    p1->integral=p1->num[1]*2+p1->num[2];
+	    p1->pure=p1->goal-p1->lose;
+		if(n==1)
+		{
+			head=p1;
+		}
+		else
+		{
+			p2->next=p1;
+			p2=p1;
+		}
+		p1=(match *)malloc(LEN);
+	}
+	p2->next=NULL;
+	return head;
+}
+
+match *Add(match *head)//增加球队 
+{
+	system("cls");//清屏 
+	system("color 72");//颜色 
+	match *p,*q,*newhead;
+	int x,y=0;
+	newhead=NULL;
+	p=q=(match *)malloc(LEN);
+	printf("How many teams you want to add?Input please：");
+	scanf("%d",&x);
+	while(y!=x)
+	{
+		y++;
+		printf("the name of team %d :",y);//球队名 
+	    scanf("%s",p->name);
+	
+	    printf("team %d win round(s):",y);//该球队赢局场数 
+	    scanf("%d",&p->num[1]);
+	
+	    printf("team %d draw round(s):",y);//该球队平局场数 
+        scanf("%d",&p->num[2]);
+	    printf("the number of team %d goal:",y);
+	    scanf("%d",&p->goal);
+	    printf("the number of team %d lose:",y);
+	    scanf("%d",&p->lose);
+	    p->integral=p->num[1]*2+p->num[2];
+	    p->pure=p->goal-p->lose;
+	    if(y==1)
+	    {
+	    	newhead=p;
+		}
+		else
+		{
+			q->next=p;
+			q=p;
+		}
+		p=(match *)malloc(LEN);
+	}
+	q->next=NULL;
+	p2->next=newhead;//让新增加的信息接入原有链表的后面 
+	return head;
+} 
+ 
+ 
+match *Amend(match *head)//修改信息 
+{
+	system("cls");
+	system("color 72");
+	do{
+		match *p=head;
+		char name[10];
+		printf("Please input the team's name which you want to modify:");
+		gets(name);
+		while(p!=NULL&&strcmp(p->name,name)!=0)
+		{
+			p=p->next;
+		}
+		if(p!=NULL)
+		{
+			toxy(25,4); 
+			printf("team_name    win      draw      goal     lose     integral\n");
+			toxy(25,6);
+			printf("|%3s%10d%10d%10d%10d%10d|\n",p->name,p->num[1],p->num[2],p->goal,p->lose,p->integral);
+			printf("Enter the new information please；\n");
+			printf("the name of new team :");//球队名 
+		    scanf("%s",p->name);
+		
+		    printf("team win round(s):");//该球队赢局场数 
+		    scanf("%d",&p->num[1]);
+		
+		    printf("team  draw round(s):");//该球队平局场数 
+	        scanf("%d",&p->num[2]);
+		    printf("the number of new team's goal:");
+		    scanf("%d",&p->goal);
+		    printf("the number of  new team's lose:");
+		    scanf("%d",&p->lose);
+		    p->integral=p->num[1]*2+p->num[2];
+		    p->pure=p->goal-p->lose;
+		    break;
+		}
+		else
+		{
+			printf("Input error!Please input again:");
+		}
+    }while(1);
+	return head;
+}
+
+
+match *Del(match *head)//删除信息 
+{
+	system("cls");//清屏 
+	do{
+	   match *p=head,*pre=NULL;//pre是p的前驱结点 
+	   char name[10];
+	   printf("Please input the team's name which you want to delete；");
+	   gets(name);
+	   while(p!=NULL&&strcmp(p->name,name)!=0)
+	   {
+		   pre=p;
+		  p=p->next;
+	   }
+	   if(p!=NULL)
+	   {
+	       if(pre==NULL)
+		   {
+		   	 head=p->next;
+		   }
+		   else
+		   {
+		 	  pre->next=p->next;
+		   }	
+		   free(p);
+		   break;
+	    }
+	    else
+	    {
+		   printf("Input error!Please input again:");
+	    }
+     }while(1);
+	return head;
+}
+
+void End()
+{
+	system("cls");
+	system("color 74");
+	toxy(20,10);
+	printf("Thanks for your using!^-^");
+	exit(0);//退出 
+	getch();
+}
+
+ 
+void print(match *head)
+{
+	system("cls");
+	system("color 74");
+	match *p,*q,t1,t2,t3,*pt;
+    for(p=head;p!=NULL;p=p->next)//球队排序，冒泡法排序 ，关于链表的排序有点小复杂哦~ 
+	{
+		
+		for(q=p->next;q!=NULL;q=q->next)     //这里有3重排序 
+		{
+			
+			if(p->integral<q->integral)
+			{
+				t1=*p;
+				*p=*q;
+				*q=t1;	
+				pt=p->next;
+				p->next=q->next;
+				q->next=pt;
+			}
+			else if(p->integral==q->integral)
+			{
+				if(p->pure<q->pure)
+				{
+					t2=*p;
+					*p=*q;
+					*q=t2;
+					pt=p->next;
+				    p->next=q->next;
+				    q->next=pt;
+				}
+				else if(p->pure==q->pure)
+				{
+					if(p->goal<q->goal)
+					{
+						t3=*p;
+						*p=*q;
+						*q=t3;
+						pt=p->next;
+				        p->next=q->next;
+				        q->next=pt;
+					}
+				}
+			}
+		}
+	}
+	p=head;//重新让p指向第一个结点 
+	toxy(20,4);
+	printf("--------------------the football match imformation----------------------\n");
+	toxy(20,6);
+	printf("team_name    win      draw      goal     lose     integral\n");
+	int m=8;
+		while(p!=NULL)
+		{
+			toxy(20,m);
+			printf("|%3s%10d%10d%10d%10d%10d|\n",p->name,p->num[1],p->num[2],p->goal,p->lose,p->integral);
+			p=p->next;
+			m+=2;
+		}
+		printf("\nPlease press any key return to MENU. ");
+		getch();
+ }
+ 
+ int main()
+{
+	match *head;
+	char x;
+	do{
+	system("cls");
+	system("color 72");
+	menu();
+	x=getch();
+	switch(x)
+	{
+	
+		case '1':
+			head=creat();
+			break;
+		case '2':
+			head=Add(head);
+			break;
+		case '3':
+			print(head);
+			break;
+		case '4':
+			head=Del(head);
+			break;
+		case '5':
+			head=Amend(head);
+			break;
+		case '6':
+			End();
+			break;
+		default:
+			printf("Input error!Please input again:");	
+	}
+    }while(1);//永远为真 
+    
+	return 0;
+}
