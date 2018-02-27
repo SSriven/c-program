@@ -1,0 +1,894 @@
+/*
+    c语言课程设计项目名称：自动存取款机模拟系统
+	作者：施瑞文 
+	专业：软件工程（商业智能） 
+	时间：2018.2.27 
+*/
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include<conio.h>
+#include<windows.h>
+#define N sizeof(struct Account)
+#define M sizeof(struct Money)
+struct Account       //账户信息 
+{
+	char name[10];       //账号昵称 
+	char password[18];       //密码 
+	struct Account *next;   //指针域 
+};
+typedef struct Account Acc;
+typedef Acc *Accp;
+
+struct Money     //钱 
+{
+	float money;
+	struct Money *next;
+};
+typedef struct Money mon;
+typedef mon *monp;
+
+//函数声明区 
+void HideCursor();          //隐藏光标
+void toxy(int x, int y);    //将光标移动到X,Y坐标处
+void color(short x);     //设置颜色
+void menu();               //菜单 
+Accp ff();                 //将文件中的内容读出  
+void signin();               //登陆或注册 
+void login();                 // 注册账号 
+void logon();                  // 账号登陆   
+void amend_password();      //修改密码
+void add_money();     //存款 
+void find_money();   //查询 
+void get_money();    //取款
+void transfer_money();   //转账
+void save_account(Accp p);  //将p所指向的内容存入文件中
+void save_money(monp p);     //将p所指向的内容存入文件中 
+float Sum();          //求余额 
+void over();                  //退出系统 
+
+char _name[20],_password[18];       //全局变量记住当前登陆账户 
+
+void color(short x)
+{
+	if(x>=0&&x<=15)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
+	}
+	else
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
+	}
+} 
+
+void HideCursor()     //隐藏光标
+{
+ CONSOLE_CURSOR_INFO cursor_info = {1, 0}; 
+ SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor_info);
+}
+
+void toxy(int x, int y)      //将光标移动到X,Y坐标处
+{
+COORD pos = { x , y };
+HANDLE Out = GetStdHandle(STD_OUTPUT_HANDLE);
+SetConsoleCursorPosition(Out, pos); 
+}
+
+Accp ff()               //将存账号的文件里的内容输出到链表中
+{
+	FILE *fp;       //文件指针 
+	int n=0;
+	Accp head=NULL;
+	Accp p2,p;
+	fp=fopen("account","r");     //以只读的方式打开文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file\n");
+	}
+	while(!feof(fp))        //判断文件位置标志是否移动到文件末尾 
+	{
+	   n++;
+	   	p=(Accp)malloc(N); //向内存申请一段空间 
+	   fread(p,N,1,fp);     //将fp所指向的文件中的内容赋给p 
+	   if(n==1)
+	   {
+	      head=p;
+	      p2=p;
+	    }
+	    else             //创建链表 
+	    {
+	    	p2->next=p;
+	    	p2=p;
+		}
+    }
+    p2->next=NULL;
+    fclose(fp);    //关闭文件 
+    return head;   //返回头指针 
+}
+
+void menu()     //菜单 
+{
+	system("cls");    //清屏  
+	do{
+		color(6);     //看着舒服的颜色
+		char t;
+		toxy(50,5);
+		printf(" 自动存取款机模拟系统");
+		toxy(50,6);
+		printf("当前账户为：%s",_name);
+		toxy(48,8);
+		printf("|     1.取款          |");
+		toxy(48,10);
+		printf("|     2.转账          |");
+		toxy(48,12);
+		printf("|     3.查询          |");
+		toxy(48,14);
+		printf("|     4.存款          |");
+		toxy(48,16);
+		printf("|     5.修改密码      |"); 
+		toxy(48,18);
+		printf("|     6.退出系统      |");
+		t=getch();                    //利用不回显函数，输入t，可以不用手动按回车键 
+		switch(t)
+		{
+			case '1':get_money();break; 
+			case '2':transfer_money();break;
+			case '3':find_money();break;
+			case '4':add_money();break;
+			case '5':amend_password();break;
+			case '6':over();break;
+			default :;break;
+		}
+    }while(1);       //永远为真 
+}
+
+void signin()       //登陆或注册 
+{
+	system("cls");
+	color(12); 
+	HideCursor();    //隐藏光标
+	char t;
+	toxy(50,5);
+	printf("自动存取款机模拟系统");
+	toxy(44,8);
+	printf("----------------------------");
+	toxy(45,10);
+	printf("请输入（1：登陆；2：注册.)");
+	toxy(44,12);
+	printf("----------------------------");
+	while(1)
+	{
+		t=getch();
+		switch(t)
+		{
+			case '1':logon();break;
+			case '2':login();break;
+			default :break;
+		}
+	}
+}
+
+void logon()      // 账号登陆 
+{ 
+	system("cls");   //清屏 
+	color(10);     //设置颜色 
+	Accp p,head;    
+	head=ff();    //调用函数 ，返回值为头结点的指针 
+    do{
+	    p=head;
+	    char t,c,k;
+	    int i=0;;
+		toxy(50,5);
+		printf("自动存取款机模拟系统");
+		toxy(45,6);
+		printf("***************************");
+		toxy(45,8);
+		printf("     登陆状态       ");
+		toxy(45,10);
+		printf("*  请输入您的账号：");
+		gets(_name);
+		toxy(45,12);
+		printf("*  请输入您的密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				_password[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		_password[i]='\0';
+		while(p!=NULL&&strcmp(p->name,_name)!=0)   //遍历链表，寻找当前输入的账户的账号 
+		{
+			p=p->next;
+		}
+		if(p!=NULL)   //如果p不为空 
+		{
+	    	if(strcmp(p->password,_password)==0)     //如果输入的密码正确 
+			{
+				toxy(48,16);
+				printf("正在登陆....");
+				Sleep(500);      //暂停0.5秒
+				system("cls");
+				color(10);
+				toxy(48,10);
+				printf("登陆成功！");
+				break;    //跳出循环
+			}
+			else      //如果输入的密码错误
+			{ 
+				toxy(48,16);
+				printf("正在登陆....");
+				Sleep(500);
+				system("cls");
+				color(10);
+				toxy(46,8);
+				printf("-------------------------");
+				toxy(46,9);
+				printf("|                       |");
+				toxy(46,10);
+				printf("| 密码错误！是否继续？  |");
+				toxy(46,12);
+				printf("| 1.是             2.否 |");
+				toxy(46,13);
+				printf("|                       |");
+				toxy(46,14);
+				printf("-------------------------");
+				while(1)
+				{
+					t=getch();  //输入t    
+					if(t=='1')          
+					{
+						system("cls");  //清屏 
+						color(10); 
+						break;
+					}
+					else if(t=='2')     //如果输入t为n，进入开始界面 
+					{
+						signin();break;
+					}
+				}
+			} 
+	   }
+	   else              //如果p为空，即输入的账号不正确 
+	   {
+	   	    toxy(48,16);
+	   	    printf("正在登陆....");
+	   	    Sleep(500);
+	   	    system("cls");
+	   	    color(10);
+	   	    toxy(46,8);
+	   	    printf("-------------------------");
+	   	    toxy(46,9);
+	   	    printf("|                       |");
+	   		toxy(46,10);
+			printf("|  账号错误！是否继续？ |");
+			toxy(46,11);
+			printf("|                       |");
+			toxy(46,12);
+			printf("|  1.是            2.否 |"); 
+			toxy(46,13);
+			printf("|                       |");
+			toxy(46,14);
+			printf("-------------------------");
+			while(1)      //死循环防止其他按键干扰 
+			{
+				c=getch();
+				if(c=='1')
+				{  
+					system("cls");
+					color(10);
+					break;
+				}
+				else if(c=='2')
+				{
+					signin();break;
+				}
+			}
+	   }
+    }while(1);      //永远为真 
+   Sleep(500);      //暂停0.5秒 
+   menu();         //账号密码均正确，进入主菜单 
+}
+
+void login()        //注册账号 
+{
+	
+	system("cls");
+	color(5); 
+	Accp p1;
+	p1=(Accp)malloc(N);     //向内存申请一段空间 
+	do{
+		color(5);
+		char name[20],password[18],againpassword[18],c,k;
+		int i=0;; 
+		toxy(50,5);
+		printf("自动存取款机模拟系统");
+		toxy(45,6);
+		printf("**************************");
+		toxy(45,8);
+		printf("   正在注册");
+		toxy(45,10);
+		printf("*  请输入账号：");
+		gets(name);
+		toxy(45,12);
+		printf("*  请输入密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				password[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		password[i]='\0';
+		i=0;
+		toxy(45,14);
+		printf("*  请确认您的密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				againpassword[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		againpassword[i]='\0';
+		if(strcmp(password,againpassword)==0)        //如果输入的两次密码均正确 
+		{
+			strcpy(p1->name,name);
+			strcpy(p1->password,password);
+			toxy(48,16);
+			printf("正在注册....");
+			Sleep(500);
+			system("cls");
+			color(12);
+			toxy(48,10);
+			printf("注册成功！");
+			Sleep(500);         //暂停0.5秒 
+			break;              //跳出循环 
+		}
+		else    //如果输入的两次密码不同 
+		{
+			toxy(48,16);
+			printf("正在注册....");
+			Sleep(500);
+			system("cls");
+			color(12);
+			toxy(46,8);
+			printf("-----------------------------");
+			toxy(46,9);
+			printf("|                           |");
+			toxy(46,10);
+			printf("|  注册失败！是否继续注册？ |");
+			toxy(46,11);
+			printf("|                           |");
+			toxy(46,12);
+			printf("|  1.是               2.否  |"); 
+			toxy(46,13);
+			printf("|                           |");
+			toxy(46,14);
+			printf("-----------------------------");
+			while(1)
+			{
+				c=getch();
+				if(c=='1')
+				{
+					system("cls");
+					color(12);
+					break;
+				}
+				else if(c=='2')
+				{
+					signin();
+					break;
+				}
+			}
+		}
+	}while(1);    //永远为真 
+	save_account(p1);     //调用函数，将p1所指向的内容存储到文件中 
+	toxy(48,12);
+	printf("正在自动为您登陆....");
+	Sleep(500);
+	menu();    //注册成功后进入主菜单 
+}
+
+
+/*修改密码
+方法比较笨，这里是先将储存在文件中的账户信息
+输出在一个链表中，遍历链表，寻找当前登陆的账户账号，修改该节点的p->password，
+再将修改后的链表存到文件中，需要注意的是修改之后再存到文件中需要将该文件中的内容
+清空*/ 
+void amend_password()        //修改密码 
+{ 
+	system("cls");         //清屏 
+	color(14);    //看着舒服的颜色 
+	HideCursor();  
+	Accp p,head;       //隐藏光标，看着更舒服 
+	head=ff();
+	FILE *fp;
+    do
+    {
+    	color(14);
+    	HideCursor();       //隐藏光标，看着舒服 
+    	p=head;
+    	char password[18],newpassword[18],t,k;
+    	int i=0;
+    	toxy(50,5);          //将光标移动到坐标为（50，5）的位置 
+		printf("个人财务管理软件");
+		toxy(50,8);
+		printf("修改密码");
+		toxy(48,10);
+		printf("请输入旧密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				password[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		password[i]='\0';
+		i=0;
+		toxy(48,12);
+		printf("请输入新密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				newpassword[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		newpassword[i]='\0';
+		while(p!=NULL&&strcmp(p->name,_name)!=0)//遍历链表，寻找当前登陆账户的账号 
+		{
+			p=p->next;
+		}
+		if(p!=NULL)                   //如果p不为空 
+		{
+			if(strcmp(p->password,password)==0)          //如果旧密码输入正确 
+			{
+				strcpy(p->password,newpassword);         //将旧密码改为新密码 
+				break;                                   //跳出循环 
+			}
+			else                                         //如果旧密码输入错误 
+			{
+				system("cls");
+				color(12);
+				toxy(46,8);
+				printf("--------------------------");
+				toxy(46,9);
+				printf("|                        |");
+				toxy(46,10);
+				printf("|  密码错误！是否继续？  |");
+				toxy(46,11);
+				printf("|                        |");
+				toxy(46,12);
+				printf("|  1.是           2.否   |");
+				toxy(46,13);
+				printf("|                        |");
+				toxy(46,14);
+				printf("--------------------------");
+				while(1)
+				{
+					t=getch();                              //输入t 
+					if(t=='1')
+					{
+						system("cls");
+						color(12);
+						break;
+					}
+					else if(t=='2')
+					  menu();
+				}
+			}
+		}
+	}while(1);                                //永远为真 
+	p=head->next;                           //使p指向第二个结点 
+	fp=fopen("account","w");                  //先清空原文件内容再将修改后的信息写入文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file\n");
+	}
+	if(fwrite(head,N,1,fp)!=1)                 //将head所指向的数据写入fp所指向的文件 
+	{
+		printf("file write error\n");
+	}
+	fclose(fp);                         //关闭文件 
+	fp=fopen("account","a");          // 打开account文件，方式为追加 
+	while(p!=NULL)                    //p不为空就执行循环体 
+	{
+		if(fwrite(p,N,1,fp)!=1)            //将p所指向的1个大小为N的数据结构写入fp所指向的文件 
+	    {
+		printf("file write error\n");
+	    }
+	    p=p->next;                     //使p指向下一个结点 
+	}
+	fclose(fp);              //关闭文件 
+	toxy(48,14);
+	printf("修改成功！正在跳转...");
+	Sleep(500);       //暂停0.5秒 
+}
+
+ 
+void save_account(Accp p1)     //将p1所指向的内容存储到文件中 
+{
+	FILE *fp;       //文件指针 
+	fp=fopen("account","a");    //以追加的方式打开文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file\n");
+	}
+	if(fwrite(p1,N,1,fp)!=1)    //将p1所指向的1个大小为N的数据结构写入fp所指向的文件中 
+	{
+		printf("file write error\n");
+	}
+	fclose(fp);        //关闭文件 
+}
+
+void add_money()       //存款 
+{
+	do
+	{
+		system("cls");   //清屏 
+		color(11);
+		monp p;
+		char t; 
+		p=(monp)malloc(M);   //向内存申请一段空间 
+		toxy(48,8);
+		printf("请输入您需要存入的金额：");
+		scanf("%f",&p->money);
+		getchar(); //吸收回车键 
+		toxy(48,10);
+		printf("正在操作，请稍后....");
+		Sleep(500);
+		save_money(p);
+		system("cls");
+		toxy(46,8);
+		printf("-------------------------");
+		toxy(46,9);
+		printf("|                       |");
+		toxy(46,10);
+		printf("| 存入成功！是否继续？  |");
+		toxy(46,12);
+		printf("| 1.是             2.否 |");
+		toxy(46,13);
+		printf("|                       |");
+		toxy(46,14);
+		printf("-------------------------");
+		while(1)
+		{
+			t=getch();
+			if(t=='1')
+			{
+				break;
+			}
+			else if(t=='2')
+			{
+				menu();
+			}
+		}
+	}while(1);
+}
+
+void find_money()     //查询余额 
+{
+	system("cls");
+	color(13);
+	float sum=0;
+	sum=Sum();   //调用函数 
+	toxy(46,12);
+	printf("余额为：%f",sum);
+	toxy(46,16);
+	printf("按任意键回到主菜单");
+	getch();
+	menu(); 
+}
+
+void get_money()      //取款 
+{
+	do
+	{
+		system("cls");
+		color(11);
+		monp p;
+		float money,sum;
+		char t;
+		toxy(46,12);
+		printf("请输入您要取的金额：");
+		scanf("%f",&money);
+		getchar();//吸收回车键 
+		sum=Sum();
+		if(money>sum)   //如果要取的金额大于余额 
+		{
+			toxy(46,14);
+			printf("余额不足，请重新输入！");
+			Sleep(500);
+			continue;    //结束本次循环 
+		}
+		p=(monp)malloc(M);    //向内存申请一段空间 
+		p->money=-money;
+		save_money(p);      
+		toxy(46,14);
+		printf("正在操作，请稍后....");
+		Sleep(500);
+		system("cls");
+		toxy(46,8);
+		printf("-------------------------");
+		toxy(46,9);
+		printf("|                       |");
+		toxy(46,10);
+		printf("| 取款成功！是否继续？  |");
+		toxy(46,12);
+		printf("| 1.是             2.否 |");
+		toxy(46,13);
+		printf("|                       |");
+		toxy(46,14);
+		printf("-------------------------");
+		while(1)
+		{
+			t=getch();
+			if(t=='1')
+			{
+				break;
+			}
+			else if(t=='2')
+			{
+				menu();break;
+			}
+		}
+	}while(1);
+	
+}
+
+void transfer_money()     //转账 
+{
+	do
+	{
+		system("cls");
+		color(9);
+		FILE *fp1;
+		monp p,head,p1;
+		float money,sum=0;
+		char name[20],t;
+		toxy(46,12);
+		printf("请输入您要转入的账号：");
+		gets(name);
+		toxy(46,14);
+		printf("请输入您要转出的金额：");
+		scanf("%f",&money);
+		getchar();   //吸收回车键 
+		sum=Sum();
+		if(money>sum)   //如果要转出的金额大于余额 
+		{
+			toxy(46,16);
+			printf("余额不足！");
+			Sleep(500);
+			continue;   //结束本次循环 
+		 } 
+		fp1=fopen(name,"ab");    //以追加的方式打开名字为name的二进制文件 
+		if(fp1==NULL)    //如果文件不存在 
+		{
+			toxy(46,16);
+			printf("账户不存在！");
+			Sleep(500);
+			continue;    
+		}
+		p=(monp)malloc(M);  //向内存申请一段空间 
+		p->money=-money;
+		save_money(p);
+		p1=(monp)malloc(M);
+		p1->money=money;
+		if(fwrite(p1,M,1,fp1)!=1)    //将p1所指向的一个大小为M的节点 存入fp1所指向的文件中 
+		{
+			printf("转账失败，请重试！");
+			continue;
+		}
+		toxy(46,18);
+		printf("正在操作，请稍后....");
+		Sleep(500);
+		system("cls");
+		toxy(46,8);
+		printf("-------------------------");
+		toxy(46,9);
+		printf("|                       |");
+		toxy(46,10);
+		printf("| 转账成功！是否继续？  |");
+		toxy(46,12);
+		printf("| 1.是             2.否 |");
+		toxy(46,13);
+		printf("|                       |");
+		toxy(46,14);
+		printf("-------------------------");
+		while(1)
+		{
+			t=getch();
+			if(t=='1')
+			{
+				break;
+			}
+			else if(t=='2')
+			{
+				menu(); 
+			}
+		}
+
+	}while(1);
+}
+
+float Sum()    //求余额 
+{
+	FILE *fp;   //文件指针 
+	monp p,head,p2;
+	int n=0;
+	float sum=0;
+	fp=fopen(_name,"rb");   //以只读的方式打开名字为_name的二进制文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file");
+	}
+	while(!feof(fp))  //判断标记是否移动到文件末尾 
+	{
+		n++;
+		p=(monp)malloc(M);   //向内存申请一段空间 
+		fread(p,M,1,fp);     //将fp所指向的文件中的一段大小为M的 内容赋给p 
+		if(n==1)
+		{
+			head=p;
+			p2=p;
+		}
+		else                //创建链表 
+		{
+			p2->next=p;
+			p2=p;
+		}
+		p2->next=NULL;
+	}
+	fclose(fp);     //关闭文件 
+	p=head;          //使p重新指向头结点 
+	while(p!=NULL)
+	{
+		sum+=p->money;    //求和 
+		p=p->next;
+	}
+	return(sum);    //返回sum值 
+}
+
+void save_money(monp p)    //将p所指向的内容存入文件中 
+{
+	FILE *fp;    //文件指针 
+	fp=fopen(_name,"ab");   //以追加的方式打开名字为_name的二进制文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file");
+	}
+	if(fwrite(p,M,1,fp)!=1)   //将p所指向的一段大小为M的内容存入fp所指向的文件中 
+	{
+		printf("write error");
+	}
+	fclose(fp);    //关闭文件  
+}
+
+void over()       //退出软件 
+{
+	char t;
+	toxy(48,11);
+	printf("-----------------------");
+	toxy(48,12);
+	printf("|   您确定要退出吗？  |");
+	toxy(48,14);
+	printf("| 1.确定     2.取消   |");
+	toxy(48,15);
+	printf("-----------------------");
+	while(1)
+	{
+		t=getch();         //输入t
+		switch(t)
+		{
+			case '1':
+			system("cls");
+		    color(6);
+			toxy(48,10);
+			printf("正在安全退出....");
+			Sleep(1000);     //暂停1秒 
+			system("cls");
+			color(8);
+			toxy(48,10);
+			printf("已安全退出软件");
+			toxy(48,12);
+			printf("谢谢使用！");
+			toxy(48,14);
+			printf("by-by^_^");
+			exit(0);  break; //终止程序 
+			case '2':
+			menu(); break;   //调用函数，进入菜单 
+			default :break;
+		}
+	}
+}
+
+main()    //简洁明了的主函数~~~ 
+{
+	signin();   //调用函数 
+}
