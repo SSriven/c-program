@@ -1,0 +1,1997 @@
+/*
+	课程设计项目名称：学生档案管理系统
+	作者：施瑞文 
+	时间：2018.3.3 
+*/
+#include<stdio.h>
+#include<string.h>
+#include<stdlib.h>
+#include<conio.h>
+#include<windows.h>
+#define N sizeof(struct Student)
+#define M sizeof(struct Password)
+#define MAX 1000
+
+
+struct Student
+{
+	char number[10];   //学号
+	char name[10];   //姓名
+	char sex[2];  //性别
+	struct Birthday  //出生日期 
+	{
+		int year;   //年
+		int month;  //月
+		int day;    //日 
+	}birtnday;
+	struct Score  //成绩
+	{
+		float c_language;  //c语言
+		float math;  //高数
+		float Russian;//俄语
+		float Russian_hearing; //俄语听力
+		float professional;  //专业导论
+		float politics;  //政治 
+	}score;
+	char remark[100];  //备注 
+	int num;
+	struct Student *next;
+};
+typedef struct Student Stu;
+typedef Stu *Stup;
+
+
+typedef struct Password
+{
+	char password[18];
+	struct Password *next;
+}pass;
+typedef pass *passw;
+
+typedef struct TOTAL    //总分 
+{
+	char number[10];
+	char name[10];
+	char sex[2];
+	float c_language;  //c语言
+	float math;  //高数
+	float Russian;//俄语
+	float Russian_hearing; //俄语听力
+	float professional;  //专业导论
+	float politics;  //政治
+	float sum;
+}Total; 
+Total total[MAX];
+
+
+//好多自定义函数 
+void color(short x);//设置颜色
+void HideCursor();     //隐藏光标
+void toxy(int x, int y);     //将光标移动到X,Y坐标处
+void menu();    //主菜单 
+void over();   //退出软件
+void signin();   //登陆 
+passw ff();    //将文件中的内容读入链表，返回值为表头地址 
+void save_password(passw p);//保存密码 
+void amend_password();   //修改密码 
+void input_information();  //信息录入 
+void amend_information();  //修改信息 
+void delete_information();  //删除信息 
+void delete_number();  //按学号查询删除
+void delete_name();   //按姓名查询删除 
+void save_information(Stup p);   //保存信息 
+void print_information();    //信息显示 
+Stup ss();   //将文件中的内容读入链表，返回值为表头地址
+void find_information();   ///查找信息 
+void find_number_information();   //按学号查询 
+void find_name_information();   //按姓名查询 
+void statistics_information();  //信息统计 
+void average_score();   //平均分
+void total_score_ranked();   //总分排名
+void fail_numbers();     //各科不及格人数 
+void assignment();   //将信息赋值到一个结构体中 
+void grade_table();   //各科成绩分布 
+void analyze_c();   //c语言 
+void analyze_math();//高数 
+void analyze_Russian();//俄语 
+void analyze_Russian_hearing();//俄语听力 
+void analyze_professional();//专业导论 
+void analyze_politics();   //政治 
+int cmp(const void *a,const void *b);
+int cmp1(const void *a,const void *b);  //快速排序 
+int cmp2(const void *a,const void *b);
+int cmp3(const void *a,const void *b);
+int cmp4(const void *a,const void *b);
+int cmp5(const void *a,const void *b);
+int cmp6(const void *a,const void *b);
+
+
+
+char _password[18];
+passw password_head;
+int len;
+
+void color(short x)    //设置颜色 
+{
+	if(x>=0&&x<=15)
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
+	}
+	else
+	{
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
+	}
+} 
+
+void HideCursor()     //隐藏光标
+{
+ CONSOLE_CURSOR_INFO cursor_info = {1, 0}; 
+ SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursor_info);
+}
+
+void toxy(int x, int y)      //将光标移动到X,Y坐标处
+{
+COORD pos = { x , y };
+HANDLE Out = GetStdHandle(STD_OUTPUT_HANDLE);
+SetConsoleCursorPosition(Out, pos); 
+}
+
+int cmp(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).sum)-((*(Total *)a).sum);
+}
+
+int cmp1(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).c_language)-((*(Total *)a).c_language);
+}
+
+int cmp2(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).math)-((*(Total *)a).math);
+}
+
+int cmp3(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).Russian)-((*(Total *)a).Russian);
+}
+
+int cmp4(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).Russian_hearing)-((*(Total *)a).Russian_hearing);
+}
+
+int cmp5(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).professional)-((*(Total *)a).professional);
+}
+
+int cmp6(const void *a,const void *b)  //快速排序 
+{
+	return ((*(Total *)b).politics)-((*(Total *)a).politics);
+}
+
+void menu()   //主菜单
+{
+	do
+	{
+		system("cls");    //清屏 
+		fflush(stdin);   //清空缓存 
+		color(14);
+		char t;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----"); 
+		toxy(45,7);
+		printf("|                        |");
+		toxy(45,8);
+		printf("|       1.信息录入       |");
+		toxy(45,9);
+		printf("|                        |");
+		toxy(45,10);
+		printf("|       2.信息修改       |");
+		toxy(45,11);
+		printf("|                        |");
+		toxy(45,12);
+		printf("|       3.信息删除       |");
+		toxy(45,13);
+		printf("|                        |");
+		toxy(45,14);
+		printf("|       4.信息显示       |");
+		toxy(45,15);
+		printf("|                        |");
+		toxy(45,16);
+		printf("|       5.信息查找       |");
+		toxy(45,17);
+		printf("|                        |");
+		toxy(45,18);
+		printf("|       6.信息统计       |");
+		toxy(45,19);
+		printf("|                        |");
+		toxy(45,20);
+		printf("|       7.修改密码       |");
+		toxy(45,21);
+		printf("|                        |");
+		toxy(45,22);
+		printf("|       8.退出软件       |");
+		toxy(45,23);
+		printf("--------------------------");
+		t=getch();
+		switch(t)
+		{
+			case '1':input_information();break;
+			case '2':amend_information();break;
+			case '3':delete_information();break;
+			case '4':print_information();break;
+			case '5':find_information();break;
+			case '6':statistics_information();break;
+			case '7':amend_password();break;
+			case '8':over();break;
+			default :break;
+		}
+	}while(1);//永远为真 
+} 
+
+passw ff()     //将文件中的内容读入链表，返回值为表头地址 
+{
+	FILE *fp;  //文件指针 
+	passw password_head=NULL;
+	fp=fopen("password","a+");   //以追加和读的方式打开名为password的文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file"); 
+	}
+	//printf("%p\n",password_head);
+	password_head=(passw)malloc(M);   //申请空间 
+	strcpy(password_head->password," ");  //初始化密码 
+	//printf("%p\n",password_head);
+	fread(password_head,M,1,fp);   //将password_head所指向的一段大小为M的内容存入fp所指向的文件中 
+	fclose(fp);    //关闭文件 
+	return password_head;   //返回值表头地址 
+}
+
+void signin()    //登录 
+{
+	do
+	{
+		system("cls");
+		color(13);   //好看的颜色 
+		passw p,head;
+		int i=0;
+		char k;
+		head=ff();   //调用函数，返回值为表头地址 
+		p=head;     
+		//printf("%s\n",p->password);
+		//printf("%p\n",p);
+		char str[]="000000";   //初始密码 
+		toxy(45,6);
+		printf("-----学生档案管理系统-----");
+		toxy(45,8);
+		printf("请输入管理者密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				_password[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		_password[i]='\0';
+		if(strcmp(p->password," ")==0)   //判断程序是否是第一次运行，
+		{
+			strcpy(p->password,str);//如果是，则将初始密码000000赋值给p->password 
+			save_password(p);   //保存p 
+		}
+		if(strcmp(head->password,_password)==0)   //判断密码是否输入正确 
+		{
+			system("cls");
+			toxy(45,8);
+			printf("正在登陆....");
+			Sleep(500);
+			menu();
+		}
+		else
+		{
+			toxy(45,10);
+			printf("密码错误！");
+			Sleep(500);
+		}
+	}while(1);
+}
+
+void amend_password()   //修改密码 
+{
+	system("cls");         //清屏 
+	color(12);    //看着舒服的颜色  
+	passw p,head;       //隐藏光标，看着更舒服 
+	head=ff();
+    do
+    { 
+        system("cls");         //清屏
+    	p=head;
+    	char password[18],newpassword[18],t,k;
+    	int i=0;
+    	toxy(45,6);          //将光标移动到坐标为（50，5）的位置 
+		printf("学生档案管理系统");
+		toxy(48,8);
+		printf("修改密码");
+		toxy(45,10);
+		printf("请输入旧密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				password[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		password[i]='\0';
+		i=0;
+		toxy(45,12);
+		printf("请输入新密码：");
+		for(;;)              //此处为输入密码不回显操作 
+		{
+			k=getch();       //输入k 
+			if(k=='\r')      //如果输入k为回车，则跳出循环 
+			{
+				break;
+			}
+			else if(k=='\b')  //如果输入k为删除键 
+			{
+				if(i>0)       //如若密码还没完全删除 
+				{
+					printf("\b");
+					printf(" ");
+					printf("\b");
+					i--;
+				}
+			}
+			else              //如果输入的k既不是删除键，也不是回车键 
+			{
+				newpassword[i]=k;   //把k的值赋给_password[i]; 
+				printf("*");      //输出*号，保护用户隐私 
+				i++;              //密码位数加1 
+			}
+		}
+		newpassword[i]='\0';
+		if(p!=NULL)                   //如果p不为空 
+		{
+			if(strcmp(p->password,password)==0)          //如果旧密码输入正确 
+			{
+				strcpy(p->password,newpassword);         //将旧密码改为新密码 
+				break;                                   //跳出循环 
+			}
+			else                                         //如果旧密码输入错误 
+			{
+				system("cls");
+				toxy(46,8);
+				printf("--------------------------");
+				toxy(46,9);
+				printf("|                        |");
+				toxy(46,10);
+				printf("|  密码错误！是否继续？  |");
+				toxy(46,11);
+				printf("|                        |");
+				toxy(46,12);
+				printf("|  1.是           2.否   |");
+				toxy(46,13);
+				printf("|                        |");
+				toxy(46,14);
+				printf("--------------------------");
+				while(1)
+				{
+					t=getch();                              //输入t 
+					if(t=='1')
+					{
+						system("cls");
+						break;
+					}
+					else if(t=='2')
+					  menu();
+				}
+			}
+		}
+	}while(1);       
+	save_password(p);                         //永远为真 
+	system("cls");
+	toxy(45,10);
+	printf("修改成功！即将返回主菜单...."); 
+	Sleep(500);
+	menu();
+} 
+
+void save_password(passw p)   //将p所指向的内容保存到文件中 
+{
+	FILE *fp;
+	fp=fopen("password","w");   //以只写的方式打开名为password的文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file"); 
+	}
+	if(fwrite(p,M,1,fp)!=1)   //将p所指向的一段大小为M的内容写入fp所指向的文件中 
+	{
+		printf("write error!"); 
+	}
+	fclose(fp);   //关闭文件 
+}
+
+Stup ss()     //将文件中的内容读出到链表中 
+{
+	FILE *fp;    //文件指针 
+	Stup head=NULL,p,p1,pr=NULL;
+	int n=0;
+	fp=fopen("student","ab+");
+	if(fp==NULL)
+	{
+		printf("cannot open file");
+	}
+	while(!feof(fp))// feof函数可以检查文件读写位置标志是否移动到文件末尾，feof(fp)检查fp所指向的文件是否结束，如果是
+	{                //则函数值为真，否则为假，即“!feof(fp)”为真，在while循环中检查 “!feof(fp)”为真，就执行循环体
+		n++;
+		p=(Stup)malloc(N); //向内存申请一段空间
+		fread(p,N,1,fp); //从fp所指向的文件读入1个大小为M的数据，存储到p所指向的空间中 
+		if(n==1)
+		{
+			head=p;
+			p1=p;
+		}
+		else
+		{
+			pr=p1;
+			p1->next=p;
+			p1=p;
+		}
+	}
+	if(pr!=NULL)
+	   pr->next=NULL;
+	else if(pr==NULL)
+		head=NULL;
+	fclose(fp);
+	return head;
+}
+
+void input_information()//录入信息 
+{
+	system("cls");
+	color(15);
+	int i=0,n;
+	Stup p;
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("信息录入");
+	toxy(45,8);
+	printf("你需要录入多少个学生的信息？请输入：");
+	scanf("%d",&n);getchar();	
+	while(i!=n)
+	{
+		system("cls");
+		i++;
+		p=(Stup)malloc(N);
+		toxy(45,6);
+	    printf("-----学生档案管理系统-----");
+	    toxy(50,7);
+	    printf("信息录入");
+	    toxy(45,8);
+	    printf("请输入学生学号：");
+	    gets(p->number);
+	    toxy(45,9);
+	    printf("请输入学生姓名：");
+		gets(p->name);
+		toxy(45,10);
+		printf("请输入学生性别(男或女)：");
+		gets(p->sex);
+		toxy(45,11);
+		printf("请输入学生出生日期（年月日，以空格隔开）：");
+		scanf("%d%d%d",&p->birtnday.year,&p->birtnday.month,&p->birtnday.day);getchar();
+		toxy(45,12);
+		printf("请输入c语言成绩：");
+		scanf("%f",&p->score.c_language);getchar();
+		toxy(45,13);
+		printf("请输入高数成绩：");
+		scanf("%f",&p->score.math);getchar();
+		toxy(45,14);
+		printf("请输入俄语成绩：");
+		scanf("%f",&p->score.Russian);getchar();
+		toxy(45,15);
+		printf("请输入俄语听力成绩：");
+		scanf("%f",&p->score.Russian_hearing);getchar();
+		toxy(45,16);
+		printf("请输入专业导论成绩：");
+		scanf("%f",&p->score.professional);getchar();
+		toxy(45,17);
+		printf("请输入政治成绩：");
+		scanf("%f",&p->score.politics);getchar();
+		toxy(45,18);
+		printf("请输入备注：");
+		gets(p->remark);
+		save_information(p);
+	}
+	toxy(48,19);
+	printf("录入完毕！按任意键返回主菜单！");
+	getch();
+}
+
+void amend_information()  //修改信息 
+{
+	system("cls");         //清屏 
+	color(11);
+	Stup p,head;
+	FILE *fp;
+	int i=15,j=0,c; 
+	char number[10];   //学号
+	char name[10],_name[10];   //姓名
+	char sex[2];  //性别
+	int year;   //年
+	int month;  //月
+	int day;    //日
+	float c_language;  //c语言
+	float math;  //高数
+	float Russian;//俄语
+	float Russian_hearing; //俄语听力
+	float professional;  //专业导论
+	float politics;  //政治 
+	char remark[100];  //备注
+	char ch,t;
+	head=ss();
+	p=head;
+	do
+	{
+		system("cls");
+		toxy(45,6);
+		printf("-----学生档案管理系统-----");
+		toxy(45,7);
+		printf("修改信息");
+		toxy(40,9);
+		printf("请输入您要修改的信息：");
+		gets(_name);
+		toxy(20,8);
+		printf("----------------------------------------------------------------------------------------------");
+		toxy(20,9);
+		printf("学号   姓名   性别   出生--日期     c语言   高 数   俄 语   俄语听力   专业导论   政 治   备注");
+		toxy(20,10);
+		printf("----------------------------------------------------------------------------------------------");
+		i=11;j=0;
+		while(p!=NULL)   //将每个结点的p->num都赋为0，以免后面数据干扰 
+		{
+			p->num=0;
+			p=p->next;
+		}
+		p=head;      //重新让p指向head 
+		while(p!=NULL)
+		{
+			if(strcmp(p->name,_name)==0)
+			{
+				toxy(18,i);
+				j++;
+				if(p->birtnday.month<10&&p->birtnday.day<10) 
+					printf("%d.%s    %s    %s     %d.0%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month<10&&p->birtnday.day>=10)
+					printf("%d.%s    %s    %s     %d.0%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month>=10&&p->birtnday.day<10)
+					printf("%d.%s    %s    %s     %d.%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else
+					printf("%d.%s    %s    %s     %d.%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				i++;
+			    p->num=j;      //给p->num赋值，即给满足搜索要求的结点编号 
+			}
+			p=p->next;
+		}
+		if(j==0)                   //如果j=0，即没有进入前面的搜索循环，也就是没有找到相应的信息 
+		{ 
+			toxy(50,i);
+			printf("没有找到相应的信息！(按0返回，按1重新搜索)");
+			while(1)               //死循环是为了防止除0和1的其他按键干扰 
+			{
+				ch=getch();     
+				if(ch=='0')
+				{
+					menu();break;
+				}
+				else if(ch=='1')
+				{
+					break;
+				}
+			}
+			if(ch=='1')     //如果输入的ch等于1，则结束本次循环 
+			   continue;
+		}
+		while(1)
+		{
+			toxy(50,i);
+			printf("请输入您要修改的信息的标号：");
+			scanf("%d",&c);
+			getchar();
+			i++;  
+			if(c<=j)              //如果c<=j，即输入正确 
+			    break;
+			else if(c>j)         //否则，输入错误 
+			{
+				toxy(50,i);
+				printf("没有找到您所要修改的信息，请重新输入！");
+				i++;
+				Sleep(500);      //暂停0.5秒 
+			}
+		}
+		p=head;      //让p重新指向head，即第一个结点 
+		while(p!=NULL&&p->num!=c)    //遍历链表，寻找满足要求的结点 
+		{
+			p=p->next;
+		}
+		if(p!=NULL)      //如果寻找成功，进入修改部分 
+		{
+			system("cls");    //清屏 
+			toxy(45,8);
+		    printf("请输入学生学号：");
+		    gets(number);
+		    strcpy(p->number,number);
+		    toxy(45,9);
+		    printf("请输入学生姓名：");
+			gets(name);
+			strcpy(p->name,name);
+			toxy(45,10);
+			printf("请输入学生性别(男或女)：");
+			gets(sex);
+			strcpy(p->sex,sex);
+			toxy(45,11);
+			printf("请输入学生出生日期（年月日，以空格隔开）：");
+			scanf("%d%d%d",&year,&month,&day);getchar();
+			p->birtnday.year=year;
+			p->birtnday.month=month;
+			p->birtnday.day=day;
+			toxy(45,12);
+			printf("请输入c语言成绩：");
+			scanf("%f",&c_language);getchar();
+			p->score.c_language=c_language;
+			toxy(45,13);
+			printf("请输入高数成绩：");
+			scanf("%f",&math);getchar();
+			p->score.math=math;
+			toxy(45,14);
+			printf("请输入俄语成绩：");
+			scanf("%f",&Russian);getchar();
+			p->score.Russian=Russian;
+			toxy(45,15);
+			printf("请输入俄语听力成绩：");
+			scanf("%f",&Russian_hearing);getchar();
+			p->score.Russian_hearing=Russian_hearing;
+			toxy(45,16);
+			printf("请输入专业导论成绩：");
+			scanf("%f",&professional);getchar();
+			p->score.professional=professional;
+			toxy(45,17);
+			printf("请输入政治成绩：");
+			scanf("%f",&politics);getchar();
+			p->score.politics=politics;
+			toxy(45,18);
+			printf("请输入备注：");
+			gets(remark);
+			strcpy(p->remark,remark);
+			toxy(46,16);
+			printf("-------------------------");
+			toxy(46,17);
+			printf("|                       |");
+			toxy(46,18);
+			printf("|     是否确认修改？    |");
+			toxy(46,19);
+			printf("| 1.确认         2.取消 |");
+			toxy(46,20);
+			printf("|                       |");
+			toxy(46,21);
+			printf("-------------------------");
+			while(1)    //死循环为防止其他按键干扰 
+			{
+				t=getch();
+				if(t=='1')
+				   break;
+				else if(t=='2')
+				{
+					menu();
+				}
+			 } 
+			 if(t=='1')  //如果t等于1，则跳出循环 
+			 {
+			 	break; 
+			 }
+		}
+	}while(1);
+	p=head;     //p重新指向头节点 
+	system("cls");
+	toxy(44,12);
+	printf("正在修改....");
+	fp=fopen("student","wb");   //打开文件的同时清除文件内的内容 
+	if(fp==NULL)
+	{
+		printf("cannot open file");
+	}
+	while(p!=NULL)
+	{
+		if(fwrite(p,N,1,fp)!=1)    //将p所指向的内容存入fp所指向的文件中 
+		{
+			printf("file write error\n");
+		}
+		p=p->next;
+	}
+	fclose(fp);     //关闭文件 
+	Sleep(500);
+	system("cls");
+	toxy(44,12);
+	printf("修改成功！正在自动跳转到主菜单....");
+	Sleep(500);
+	menu();
+}
+
+void delete_information()  //删除信息 
+{
+	do
+	{
+		system("cls");
+		color(12);
+		char t;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----");
+		toxy(48,7);
+		printf("信息删除");
+		toxy(45,9);
+		printf("1)  按学号查询删除");
+		toxy(45,11);
+		printf("2)  按姓名查询删除");
+		toxy(48,13);
+		printf("按0返回主菜单");
+		t=getch();
+		switch(t)
+		{
+			case '0':menu();break;
+			case '1':delete_number();break;
+			case '2':delete_name();break;
+			default :break;
+		}
+	}while(1);
+}
+
+void delete_number()  //按学号查询删除 
+{
+	do
+	{
+		system("cls");
+		color(10);
+		char number[10];
+		char t,c;
+		int i=11,j=0;
+		Stup head,p,pre;
+		FILE *fp;
+		toxy(48,9);
+		printf("请输入你要删除的学生的学号：");
+		gets(number);
+		head=ss();
+		p=head;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----"); 
+		toxy(20,8);
+		printf("----------------------------------------------------------------------------------------------");
+		toxy(20,9);
+		printf("学号   姓名   性别   出生--日期     c语言   高 数   俄 语   俄语听力   专业导论   政 治   备注");
+		toxy(20,10);
+		printf("----------------------------------------------------------------------------------------------");
+		while(p!=NULL&&strcmp(p->number,number)!=0)
+		{
+			pre=p;
+			p=p->next;
+		}
+		if(p!=NULL)
+		{
+			toxy(20,i);
+			if(p->birtnday.month<10&&p->birtnday.day<10) 
+				printf("%s    %s    %s     %d.0%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+			else if(p->birtnday.month<10&&p->birtnday.day>=10)
+				printf("%s    %s    %s     %d.0%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+			else if(p->birtnday.month>=10&&p->birtnday.day<10)
+				printf("%s    %s    %s     %d.%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+			else
+				printf("%s    %s    %s     %d.%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+			toxy(45,i+1);
+			printf("1.删除        2.取消");
+			while(1)
+			{
+				c=getch();
+				if(c=='1')
+					break;
+				else if(c=='2')
+					delete_number();
+			}
+			if(pre==NULL)
+				head=head->next;
+			else
+				pre->next=p->next;
+			system("cls"); 
+			toxy(45,10);
+			printf("正在删除....");
+			p=head->next;
+			fp=fopen("student","wb");
+			if(fp==NULL)
+			{
+				printf("cannot open file"); 
+			}
+			if(fwrite(head,N,1,fp)!=1)
+			{
+				printf("write error");
+			} 
+			fclose(fp);
+			fp=fopen("student","ab");
+			if(fp==NULL)
+			{
+				printf("cannot open file"); 
+			}
+			while(p!=NULL)
+			{
+				if(fwrite(p,N,1,fp)!=1)
+				{
+					printf("write error");
+				} 
+				p=p->next;
+			}
+			fclose(fp);
+			Sleep(500);
+			system("cls");
+			toxy(45,10);
+			printf("删除成功！正在返回....");
+			Sleep(500);
+			delete_information(); 
+		}
+	    else if(p==NULL)
+	    {
+	    	toxy(48,i);
+	    	printf("您输入的信息不存在！按0返回主菜单，1返回上一级菜单，2重新查找");
+	    	while(1)
+	    	{
+	    		t=getch();
+	    		if(t=='0')
+	    		{
+	    			menu();
+				}
+				else if(t=='1')
+				{
+					delete_information();
+				}
+				else if(t=='2')
+				{
+					break;
+				}
+			}
+		}
+		free(p);
+	}while(1);
+}
+
+void delete_name()   //按姓名查询删除 
+{
+	do
+	{
+		system("cls");
+		color(10);
+		char name[10];
+		char t,c;
+		int i=11,j=0,key;
+		Stup head,p,pre;
+		FILE *fp;
+		toxy(48,9);
+		printf("请输入你要删除的学生的姓名：");
+		gets(name);
+		head=ss();
+		p=head;
+		while(p!=NULL)
+		{
+			p->num=0;
+			p=p->next;
+		}
+		p=head;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----"); 
+		toxy(20,8);
+		printf("----------------------------------------------------------------------------------------------");
+		toxy(20,9);
+		printf("学号   姓名   性别   出生--日期     c语言   高 数   俄 语   俄语听力   专业导论   政 治   备注");
+		toxy(20,10);
+		printf("----------------------------------------------------------------------------------------------");
+		while(p!=NULL)
+		{
+			if(strcmp(p->name,name)==0)
+			{
+				toxy(18,i);
+				j++;
+				if(p->birtnday.month<10&&p->birtnday.day<10) 
+					printf("%d.%s    %s    %s     %d.0%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month<10&&p->birtnday.day>=10)
+					printf("%d.%s    %s    %s     %d.0%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month>=10&&p->birtnday.day<10)
+					printf("%d.%s    %s    %s     %d.%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else
+					printf("%d.%s    %s    %s     %d.%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",j,p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				i++;
+				p->num=j;
+			}
+			p=p->next;
+		}
+		if(j==0)
+	    {
+	    	toxy(48,i);
+	    	printf("您输入的信息不存在！按0返回主菜单，1返回上一级菜单，2重新查找");
+	    	while(1)
+	    	{
+	    		t=getch();
+	    		if(t=='0')
+	    		{
+	    			menu();
+				}
+				else if(t=='1')
+				{
+					delete_information();
+				}
+				else if(t=='2')
+				{
+					break;
+				}
+			}
+			if(t=='2')
+				continue;
+		}
+		while(1)
+		{
+			toxy(50,i);
+			printf("请输入您要删除的信息的标号：");
+			scanf("%d",&key);
+			getchar();
+			i++;
+			if(key<=j)              //如果c<=j，即输入正确 
+			    break;
+			else if(key>j)         //否则，输入错误 
+			{
+				toxy(50,i);
+				printf("没有找到您所要删除的信息，请重新输入！");
+				i++;
+				Sleep(500);      //暂停0.5秒 
+			}
+		}
+		toxy(46,16);
+		printf("-------------------------");
+		toxy(46,17);
+		printf("|                       |");
+		toxy(46,18);
+		printf("|       确认删除？      |");
+		toxy(46,19);
+		printf("| 1.确认         2.取消 |");
+		toxy(46,20);
+		printf("|                       |");
+		toxy(46,21);
+		printf("-------------------------");
+		
+		while(1)
+		{
+			p=head;
+			pre=NULL;
+			c=getch();
+			if(c=='1')
+			{
+				while(p!=NULL&&p->num!=key)
+				{
+					pre=p;
+					p=p->next;
+				}
+				if(p!=NULL)
+				{
+					if(pre==NULL)
+						head=head->next;
+					else
+						pre->next=p->next;
+				}
+				free(p);
+				break;
+			}
+			else if(c=='2')
+				delete_number();
+		}
+		system("cls"); 
+		toxy(45,10);
+		printf("正在删除....");
+		fp=fopen("student","wb");
+		if(fp==NULL)
+		{
+			printf("cannot open file"); 
+		}
+		if(head!=NULL&&fwrite(head,N,1,fp)!=1)
+		{
+			printf("write error");
+		} 
+		fclose(fp);
+		if(head!=NULL)
+		{
+			p=head->next;
+			fp=fopen("student","ab");
+			if(fp==NULL)
+			{
+				printf("cannot open file"); 
+			}
+			while(p!=NULL)
+			{
+				if(fwrite(p,N,1,fp)!=1)
+				{
+					printf("write error");
+				} 
+				p=p->next;
+			}
+			fclose(fp);
+		}
+		Sleep(500);
+		system("cls");
+		toxy(45,10);
+		printf("删除成功！正在返回....");
+		Sleep(500);
+		delete_information(); 
+	}while(1);
+}
+
+void print_information()  //输出信息 
+{
+	system("cls");
+	color(11);
+	Stup head,p;
+	int i=11;
+	head=ss();
+	p=head;
+	toxy(45,6);
+	printf("-----学生档案管理系统-----"); 
+	toxy(20,8);
+	printf("----------------------------------------------------------------------------------------------");
+	toxy(20,9);
+	printf("学号   姓名   性别   出生--日期     c语言   高 数   俄 语   俄语听力   专业导论   政 治   备注");
+	toxy(20,10);
+	printf("----------------------------------------------------------------------------------------------");
+	while(p!=NULL)
+	{
+		toxy(20,i);
+		if(p->birtnday.month<10&&p->birtnday.day<10) 
+			printf("%s    %s    %s     %d.0%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+		else if(p->birtnday.month<10&&p->birtnday.day>=10)
+			printf("%s    %s    %s     %d.0%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+		else if(p->birtnday.month>=10&&p->birtnday.day<10)
+			printf("%s    %s    %s     %d.%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+		else
+			printf("%s    %s    %s     %d.%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+		i++;
+		p=p->next;
+	}
+	toxy(45,i);
+	printf("按任意键返回主菜单！");
+	getch();
+}
+
+void find_information()  //查找信息 
+{ 
+	do
+	{
+		system("cls");
+		char t;
+		color(10);
+		toxy(45,6);
+		printf("-----学生档案管理系统-----");
+		toxy(50,7);
+		printf("查找信息");
+		toxy(48,9);
+		printf("1)  学号查询");
+		toxy(48,11);
+		printf("2)  姓名查询");
+		toxy(48,13);
+		printf("按0返回主菜单");
+		t=getch();
+		switch(t)
+		{
+			case '0':menu();break;
+			case '1':find_number_information();break;
+			case '2':find_name_information();break;
+			default :break;
+		}
+	}while(1);
+}
+
+void find_number_information()  //按学号查找 
+{
+	do
+	{
+		system("cls");
+		color(10);
+		char number[10];
+		char t;
+		int i=11,j=0;
+		Stup head,p;
+		toxy(48,9);
+		printf("请输入你要查找的学生的学号：");
+		gets(number);
+		head=ss();
+		p=head;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----"); 
+		toxy(20,8);
+		printf("----------------------------------------------------------------------------------------------");
+		toxy(20,9);
+		printf("学号   姓名   性别   出生--日期     c语言   高 数   俄 语   俄语听力   专业导论   政 治   备注");
+		toxy(20,10);
+		printf("----------------------------------------------------------------------------------------------");
+		while(p!=NULL)
+		{
+			if(strcmp(p->number,number)==0)
+			{
+				toxy(20,i);
+				if(p->birtnday.month<10&&p->birtnday.day<10) 
+					printf("%s    %s    %s     %d.0%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month<10&&p->birtnday.day>=10)
+					printf("%s    %s    %s     %d.0%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month>=10&&p->birtnday.day<10)
+					printf("%s    %s    %s     %d.%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else
+					printf("%s    %s    %s     %d.%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				i++;
+				j++;
+		   }
+			p=p->next;
+	    }
+	    if(j==0)
+	    {
+	    	toxy(48,i);
+	    	printf("您输入的信息不存在！");
+		}
+	    toxy(48,i+1);
+	    printf("按0继续查找，按1返回");
+		while(1)
+		{
+			t=getch();
+			if(t=='0')
+			{
+				break;
+			}
+			else if(t=='1')
+			{
+				find_information();
+			}
+		 } 
+	}while(1);
+}
+
+void find_name_information()   //按姓名查找 
+{
+	do
+	{
+		system("cls");
+		color(10);
+		char name[10];
+		char t;
+		int i=11,j=0;
+		Stup head,p;
+		toxy(48,9);
+		printf("请输入你要查找的学生的姓名：");
+		gets(name);
+		head=ss();
+		p=head;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----"); 
+		toxy(20,8);
+		printf("----------------------------------------------------------------------------------------------");
+		toxy(20,9);
+		printf("学号   姓名   性别   出生--日期     c语言   高 数   俄 语   俄语听力   专业导论   政 治   备注");
+		toxy(20,10);
+		printf("----------------------------------------------------------------------------------------------");
+		while(p!=NULL)
+		{
+			if(strcmp(p->name,name)==0)
+			{
+				toxy(20,i);
+				if(p->birtnday.month<10&&p->birtnday.day<10) 
+					printf("%s    %s    %s     %d.0%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month<10&&p->birtnday.day>=10)
+					printf("%s    %s    %s     %d.0%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else if(p->birtnday.month>=10&&p->birtnday.day<10)
+					printf("%s    %s    %s     %d.%d.0%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				else
+					printf("%s    %s    %s     %d.%d.%d     %.2f   %.2f   %.2f     %.2f     %.2f     %.2f    %s\n",p->number,p->name,p->sex,p->birtnday.year,p->birtnday.month,p->birtnday.day,p->score.c_language,p->score.math,p->score.Russian,p->score.Russian_hearing,p->score.professional,p->score.politics,p->remark);
+				i++;
+				j++;
+		   }
+			p=p->next;
+	    }
+	    if(j==0)
+	    {
+	    	toxy(48,i);
+	    	printf("您输入的信息不存在！");
+		}
+	    toxy(48,i+1);
+	    printf("按0继续查找，按1返回");
+		while(1)
+		{
+			t=getch();
+			if(t=='0')
+			{
+				break;
+			}
+			else if(t=='1')
+			{
+				find_information();
+			}
+		 } 
+	}while(1);
+}
+
+void assignment()   //将链表的内容赋值给一个结构体数组 
+{
+	Stup head,p;
+	head=ss();
+	p=head;
+	int i=0;
+	while(p!=NULL)
+	{
+		strcpy(total[i].number,p->number);
+		strcpy(total[i].name,p->name);
+		strcpy(total[i].sex,p->sex);
+		total[i].c_language=p->score.c_language;
+		total[i].math=p->score.math;
+		total[i].Russian=p->score.Russian;
+		total[i].Russian_hearing=p->score.Russian_hearing;
+		total[i].professional=p->score.professional;
+		total[i].politics=p->score.politics;
+		total[i].sum=total[i].c_language+total[i].math+total[i].Russian+total[i].Russian_hearing+total[i].professional+total[i].politics;
+		i++;
+		p=p->next;
+	}
+	len=i;
+}
+
+void statistics_information()   //数据统计 
+{
+	do
+	{
+		system("cls");
+		color(6);
+		char t;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----");
+		toxy(50,7);
+		printf("数据统计");
+		toxy(48,9);
+		printf("1)  平均分");
+		toxy(48,11);
+		printf("2)  总分排名");
+		toxy(48,13);
+		printf("3)  各学科不及格人数");
+		toxy(48,15);
+		printf("4)  各科成绩分布分析"); 
+		toxy(45,17);
+		printf("按0返回主菜单");
+		t=getch();
+		switch(t)
+		{
+			case '0':menu();break;
+			case '1':average_score();break;
+			case '2':total_score_ranked();break;
+			case '3':fail_numbers();break;
+			case '4':grade_table();break;
+			default :break;
+		}
+	}while(1);
+}
+
+void average_score()   //平均分 
+{
+	system("cls");
+	color(10);
+	float sum_c=0,sum_math=0,sum_Russian=0,sum_Russian_hearing=0,sum_professional=0,sum_politics=0;
+	float average_c,average_math,average_Russian,average_Russian_hearing,average_professional,average_politics;
+	int i=0;
+	Stup head,p;
+	head=ss();
+	p=head;
+	while(p!=NULL)
+	{
+		sum_c+=p->score.c_language;
+		sum_math+=p->score.math;
+		sum_Russian+=p->score.Russian;
+		sum_Russian_hearing+=p->score.Russian_hearing;
+		sum_professional+=p->score.professional;
+		sum_politics+=p->score.politics;
+		p=p->next;
+		i++;
+	}
+	average_c=sum_c*1.0/i;
+	average_math=sum_math*1.0/i;
+	average_Russian=sum_Russian*1.0/i;
+	average_Russian_hearing=sum_Russian_hearing*1.0/i;
+	average_professional=sum_professional*1.0/i;
+	average_politics=sum_politics*1.0/i;
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(48,7);
+	printf("各学科平均分");
+	toxy(30,8);
+	printf("----------------------------------------------------");
+	toxy(30,9);
+	printf("  c语言   高数   俄语   俄语听力   专业导论   政治");
+	toxy(30,10);
+	printf("----------------------------------------------------");
+	toxy(30,11);
+	printf("  %.2f   %.2f  %.2f    %.2f     %.2f    %.2f",average_c,average_math,average_Russian,average_Russian_hearing,average_professional,average_politics);
+	toxy(45,12);
+	printf("总人数为：%d",i);
+	toxy(50,13);
+	printf("按任意键返回主菜单");
+	getch(); 
+	
+}
+
+void total_score_ranked()  //总分排名 
+{
+	system("cls");
+	color(10);
+	assignment();
+	int j,k=11;
+	qsort(total,len,sizeof(Total),cmp);   //快速排序 
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(48,7);
+	printf("总分排名");
+	toxy(20,8);
+	printf("--------------------------------------------------------------------------------------------");
+	toxy(20,9);
+	printf("学号   姓名   性别     c语言    高 数    俄 语   俄语听力   专业导论   政 治     总分   名次");
+	toxy(20,10);
+	printf("--------------------------------------------------------------------------------------------");
+	for(j=0;j<len;j++)
+	{
+		toxy(20,k);
+		printf("%s     %s    %s      %.2f    %.2f    %.2f    %.2f      %.2f     %.2f    %.2f    %d\n",total[j].number,total[j].name,total[j].sex,total[j].c_language,total[j].math,total[j].Russian,total[j].Russian_hearing,total[j].professional,total[j].politics,total[j].sum,j+1);
+		k++;
+	}
+	toxy(45,k);
+	printf("按任意键返回主菜单");
+	getch();
+}
+
+void fail_numbers()   //各科不及格人数 
+{
+	system("cls");
+	color(10);
+	int fail_c=0,fail_math=0,fail_Russian=0,fail_Russian_hearing=0,fail_professional=0,fail_politics=0; 
+	int i;
+	assignment();
+	for(i=0;i<len;i++)
+	{
+		if(total[i].c_language<60)
+			fail_c++;
+		if(total[i].math<60)
+			fail_math++;
+		if(total[i].Russian<60)
+			fail_Russian++;
+		if(total[i].Russian_hearing<60)
+			fail_Russian_hearing++;
+		if(total[i].professional<60)
+			fail_professional++;
+		if(total[i].politics<60)
+			fail_politics++;
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(48,7);
+	printf("各科不及格人数");
+	toxy(30,8);
+	printf("-----------------------------------------------------");
+	toxy(30,9);
+	printf("c语言    高 数    俄 语   俄语听力   专业导论   政 治");
+	toxy(30,10);
+	printf("-----------------------------------------------------");
+	toxy(30,11);
+	printf("%-10d%-10d%-10d%-10d%-10d%-10d",fail_c,fail_math,fail_Russian,fail_Russian_hearing,fail_professional,fail_politics);
+	toxy(45,12);
+	printf("请按任意键返回");
+	getch();
+}
+
+void grade_table()    //各科各分数段人数信息统计 
+{
+	do
+	{
+		system("cls");
+		color(10);
+		char t;
+		toxy(45,6);
+		printf("-----学生档案管理系统-----");
+		toxy(50,7);
+		printf("各分数段统计");
+		toxy(48,9);
+		printf("(1)  c语言");
+		toxy(48,11);
+		printf("(2)  高等数学");
+		toxy(48,13);
+		printf("(3)  俄语");
+		toxy(48,15);
+		printf("(4)  俄语听力");
+		toxy(48,17);
+		printf("(5)  专业导论");
+		toxy(48,19);
+		printf("(6)  政治");
+		toxy(48,21);
+		printf("按0返回上一级");
+		t=getch();
+		switch(t)
+		{
+			case '0':statistics_information();break;
+			case '1':analyze_c();break;
+			case '2':analyze_math();break;
+			case '3':analyze_Russian();break;
+			case '4':analyze_Russian_hearing();break;
+			case '5':analyze_professional();break;
+			case '6':analyze_politics();break;
+			default :break;
+		}
+	}while(1);
+}
+
+void analyze_c()  //c语言 
+{
+	system("cls");
+	color(11);
+	assignment();
+	qsort(total,len,sizeof(Total),cmp1);   //快速排序 
+	int numbers_A=0,numbers_B=0,numbers_C=0,numbers_D=0,numbers_E=0;
+	int i,j,k=12;
+	for(i=0;i<len;i++)
+	{
+		switch((int)(total[i].c_language/10))
+		{
+			case 10:
+			case 9:numbers_A++;break;
+			case 8:numbers_B++;break;
+			case 7:numbers_C++;break;
+			case 6:numbers_D++;break;
+			default:numbers_E++;break;
+		}
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("c语言--各分数段统计");
+	toxy(36,9);
+	printf("-------------------------------------------------");
+	toxy(36,10);
+	printf("学号           姓名           性别           分数");
+	toxy(36,11);
+	printf("-------------------------------------------------");
+	toxy(18,12);
+	printf("90~100人数为：%d",numbers_A);
+	for(j=0;j<numbers_A;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].c_language);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("80~90人数为：%d",numbers_B);
+	for(j=numbers_A;j<numbers_A+numbers_B;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].c_language);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("70~80人数为：%d",numbers_C);
+	for(j=numbers_A+numbers_B;j<numbers_A+numbers_B+numbers_C;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].c_language);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("60~70人数为：%d",numbers_D);
+	for(j=numbers_A+numbers_B+numbers_C;j<numbers_A+numbers_B+numbers_C+numbers_D;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].c_language);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("0~60人数为：%d",numbers_E);
+	for(j=numbers_A+numbers_B+numbers_C+numbers_D;j<len;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].c_language);
+		k++;
+	}
+	toxy(48,k);
+	printf("按任意键返回上一级");
+	getch();
+} 
+
+void analyze_math()  //高数 
+{
+	system("cls");
+	color(11);
+	assignment();
+	qsort(total,len,sizeof(Total),cmp2);   //快速排序 
+	int numbers_A=0,numbers_B=0,numbers_C=0,numbers_D=0,numbers_E=0;
+	int i,j,k=12;
+	for(i=0;i<len;i++)
+	{
+		switch((int)(total[i].math/10))
+		{
+			case 10:
+			case 9:numbers_A++;break;
+			case 8:numbers_B++;break;
+			case 7:numbers_C++;break;
+			case 6:numbers_D++;break;
+			default:numbers_E++;break;
+		}
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("高数--各分数段统计");
+	toxy(36,9);
+	printf("-------------------------------------------------");
+	toxy(36,10);
+	printf("学号           姓名           性别           分数");
+	toxy(36,11);
+	printf("-------------------------------------------------");
+	toxy(18,12);
+	printf("90~100人数为：%d",numbers_A);
+	for(j=0;j<numbers_A;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].math);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("80~90人数为：%d",numbers_B);
+	for(j=numbers_A;j<numbers_A+numbers_B;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].math);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("70~80人数为：%d",numbers_C);
+	for(j=numbers_A+numbers_B;j<numbers_A+numbers_B+numbers_C;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].math);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("60~70人数为：%d",numbers_D);
+	for(j=numbers_A+numbers_B+numbers_C;j<numbers_A+numbers_B+numbers_C+numbers_D;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].math);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("0~60人数为：%d",numbers_E);
+	for(j=numbers_A+numbers_B+numbers_C+numbers_D;j<len;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].math);
+		k++;
+	}
+	toxy(48,k);
+	printf("按任意键返回上一级");
+	getch();
+}
+
+void analyze_Russian()   //俄语 
+{
+	system("cls");
+	color(11);
+	assignment();
+	qsort(total,len,sizeof(Total),cmp3);   //快速排序 
+	int numbers_A=0,numbers_B=0,numbers_C=0,numbers_D=0,numbers_E=0;
+	int i,j,k=12;
+	for(i=0;i<len;i++)
+	{
+		switch((int)(total[i].Russian/10))
+		{
+			case 10:
+			case 9:numbers_A++;break;
+			case 8:numbers_B++;break;
+			case 7:numbers_C++;break;
+			case 6:numbers_D++;break;
+			default:numbers_E++;break;
+		}
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("俄语--各分数段统计");
+	toxy(36,9);
+	printf("-------------------------------------------------");
+	toxy(36,10);
+	printf("学号           姓名           性别           分数");
+	toxy(36,11);
+	printf("-------------------------------------------------");
+	toxy(18,12);
+	printf("90~100人数为：%d",numbers_A);
+	for(j=0;j<numbers_A;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("80~90人数为：%d",numbers_B);
+	for(j=numbers_A;j<numbers_A+numbers_B;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("70~80人数为：%d",numbers_C);
+	for(j=numbers_A+numbers_B;j<numbers_A+numbers_B+numbers_C;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("60~70人数为：%d",numbers_D);
+	for(j=numbers_A+numbers_B+numbers_C;j<numbers_A+numbers_B+numbers_C+numbers_D;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("0~60人数为：%d",numbers_E);
+	for(j=numbers_A+numbers_B+numbers_C+numbers_D;j<len;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian);
+		k++;
+	}
+	toxy(48,k);
+	printf("按任意键返回上一级");
+	getch();
+}
+
+void analyze_Russian_hearing()  //俄语听力 
+{
+	system("cls");
+	color(11);
+	assignment();
+	qsort(total,len,sizeof(Total),cmp4);   //快速排序 
+	int numbers_A=0,numbers_B=0,numbers_C=0,numbers_D=0,numbers_E=0;
+	int i,j,k=12;
+	for(i=0;i<len;i++)
+	{
+		switch((int)(total[i].Russian_hearing/10))
+		{
+			case 10:
+			case 9:numbers_A++;break;
+			case 8:numbers_B++;break;
+			case 7:numbers_C++;break;
+			case 6:numbers_D++;break;
+			default:numbers_E++;break;
+		}
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("俄语听力--各分数段统计");
+	toxy(36,9);
+	printf("-------------------------------------------------");
+	toxy(36,10);
+	printf("学号           姓名           性别           分数");
+	toxy(36,11);
+	printf("-------------------------------------------------");
+	toxy(18,12);
+	printf("90~100人数为：%d",numbers_A);
+	for(j=0;j<numbers_A;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian_hearing);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("80~90人数为：%d",numbers_B);
+	for(j=numbers_A;j<numbers_A+numbers_B;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian_hearing);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("70~80人数为：%d",numbers_C);
+	for(j=numbers_A+numbers_B;j<numbers_A+numbers_B+numbers_C;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian_hearing);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("60~70人数为：%d",numbers_D);
+	for(j=numbers_A+numbers_B+numbers_C;j<numbers_A+numbers_B+numbers_C+numbers_D;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian_hearing);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("0~60人数为：%d",numbers_E);
+	for(j=numbers_A+numbers_B+numbers_C+numbers_D;j<len;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].Russian_hearing);
+		k++;
+	}
+	toxy(48,k);
+	printf("按任意键返回上一级");
+	getch();
+}
+
+void analyze_professional()  //专业导论 
+{
+	system("cls");
+	color(11);
+	assignment();
+	qsort(total,len,sizeof(Total),cmp5);   //快速排序 
+	int numbers_A=0,numbers_B=0,numbers_C=0,numbers_D=0,numbers_E=0;
+	int i,j,k=12;
+	for(i=0;i<len;i++)
+	{
+		switch((int)(total[i].professional/10))
+		{
+			case 10:
+			case 9:numbers_A++;break;
+			case 8:numbers_B++;break;
+			case 7:numbers_C++;break;
+			case 6:numbers_D++;break;
+			default:numbers_E++;break;
+		}
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("专业导论--各分数段统计");
+	toxy(36,9);
+	printf("-------------------------------------------------");
+	toxy(36,10);
+	printf("学号           姓名           性别           分数");
+	toxy(36,11);
+	printf("-------------------------------------------------");
+	toxy(18,12);
+	printf("90~100人数为：%d",numbers_A);
+	for(j=0;j<numbers_A;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].professional);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("80~90人数为：%d",numbers_B);
+	for(j=numbers_A;j<numbers_A+numbers_B;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].professional);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("70~80人数为：%d",numbers_C);
+	for(j=numbers_A+numbers_B;j<numbers_A+numbers_B+numbers_C;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].professional);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("60~70人数为：%d",numbers_D);
+	for(j=numbers_A+numbers_B+numbers_C;j<numbers_A+numbers_B+numbers_C+numbers_D;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].professional);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("0~60人数为：%d",numbers_E);
+	for(j=numbers_A+numbers_B+numbers_C+numbers_D;j<len;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].professional);
+		k++;
+	}
+	toxy(48,k);
+	printf("按任意键返回上一级");
+	getch();
+}
+
+void analyze_politics()  //政治 
+{
+	system("cls");
+	color(11);
+	assignment();
+	qsort(total,len,sizeof(Total),cmp6);   //快速排序 
+	int numbers_A=0,numbers_B=0,numbers_C=0,numbers_D=0,numbers_E=0;
+	int i,j,k=12;
+	for(i=0;i<len;i++)
+	{
+		switch((int)(total[i].politics/10))
+		{
+			case 10:
+			case 9:numbers_A++;break;
+			case 8:numbers_B++;break;
+			case 7:numbers_C++;break;
+			case 6:numbers_D++;break;
+			default:numbers_E++;break;
+		}
+	}
+	toxy(45,6);
+	printf("-----学生档案管理系统-----");
+	toxy(50,7);
+	printf("政治--各分数段统计");
+	toxy(36,9);
+	printf("-------------------------------------------------");
+	toxy(36,10);
+	printf("学号           姓名           性别           分数");
+	toxy(36,11);
+	printf("-------------------------------------------------");
+	toxy(18,12);
+	printf("90~100人数为：%d",numbers_A);
+	for(j=0;j<numbers_A;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].politics);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("80~90人数为：%d",numbers_B);
+	for(j=numbers_A;j<numbers_A+numbers_B;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].politics);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("70~80人数为：%d",numbers_C);
+	for(j=numbers_A+numbers_B;j<numbers_A+numbers_B+numbers_C;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].politics);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("60~70人数为：%d",numbers_D);
+	for(j=numbers_A+numbers_B+numbers_C;j<numbers_A+numbers_B+numbers_C+numbers_D;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].politics);
+		k++;
+	}
+	k++;
+	toxy(18,k);
+	printf("0~60人数为：%d",numbers_E);
+	for(j=numbers_A+numbers_B+numbers_C+numbers_D;j<len;j++)
+	{
+		toxy(36,k);
+		printf("%s             %s           %s             %.2f",total[j].number,total[j].name,total[j].sex,total[j].politics);
+		k++;
+	}
+	toxy(48,k);
+	printf("按任意键返回上一级");
+	getch();
+}
+
+void save_information(Stup p)   //将p所指向的内容写入文件中 
+{
+	FILE *fp;
+	fp=fopen("student","ab+");
+	if(fp==NULL)
+	{
+		printf("cannot open file"); 
+	}
+	if(fwrite(p,N,1,fp)!=1)
+	{
+		printf("write error");
+	} 
+	fclose(fp);
+}
+
+void over()       //退出软件 
+{
+	char t;
+	toxy(45,11);
+	printf("--------------------------");
+	toxy(45,12);
+	printf("|    您确定要退出吗？    |");
+	toxy(45,14);
+	printf("|  1.确定      2.取消    |");
+	toxy(45,15);
+	printf("--------------------------");
+	while(1)
+	{
+		t=getch();         //输入t
+		switch(t)
+		{
+			case '1':
+			system("cls");
+		    color(6);
+			toxy(48,10);
+			printf("正在安全退出....");
+			Sleep(1000);     //暂停1秒 
+			system("cls");
+			color(8);
+			toxy(48,10);
+			printf("已安全退出软件");
+			toxy(48,12);
+			printf("谢谢使用！");
+			toxy(48,14);
+			printf("by-by^_^");
+			free(password_head);
+			exit(0);  break; //终止程序 
+			case '2':
+			menu(); break;   //调用函数，进入菜单 
+			default :break;
+		}
+	}
+}
+
+main()  //简单明了的主函数^_^ 
+{
+	HideCursor();
+	signin();  //登录界面 
+}
