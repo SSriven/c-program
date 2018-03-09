@@ -9,6 +9,7 @@
 #include<stdlib.h>
 #include<conio.h>
 #include<windows.h>
+#include<time.h> 
 #define N sizeof(struct Account)
 #define M sizeof(struct Money)
 struct Account       //账户信息 
@@ -23,6 +24,8 @@ typedef Acc *Accp;
 struct Money     //钱 
 {
 	float money;
+	char time[10];//时间
+	char date[10];//日期 
 	struct Money *next;
 };
 typedef struct Money mon;
@@ -45,7 +48,10 @@ void transfer_money();   //转账
 void save_account(Accp p);  //将p所指向的内容存入文件中
 void save_money(monp p);     //将p所指向的内容存入文件中 
 float Sum();          //求余额 
-void over();                  //退出系统 
+void over();                  //退出系统  
+void list();   //账单明细 
+monp ss();
+
 
 char _name[20],_password[18];       //全局变量记住当前登陆账户 
 
@@ -80,28 +86,31 @@ Accp ff()               //将存账号的文件里的内容输出到链表中
 	int n=0;
 	Accp head=NULL;
 	Accp p2,p;
-	fp=fopen("account","r");     //以只读的方式打开文件 
+	fp=fopen("account","a+");     //以只读的方式打开文件 
 	if(fp==NULL)
 	{
 		printf("cannot open file\n");
 	}
-	while(!feof(fp))        //判断文件位置标志是否移动到文件末尾 
+	else
 	{
-	   n++;
-	   	p=(Accp)malloc(N); //向内存申请一段空间 
-	   fread(p,N,1,fp);     //将fp所指向的文件中的内容赋给p 
-	   if(n==1)
-	   {
-	      head=p;
-	      p2=p;
+		while(!feof(fp))        //判断文件位置标志是否移动到文件末尾 
+		{
+		   n++;
+		   	p=(Accp)malloc(N); //向内存申请一段空间 
+		   fread(p,N,1,fp);     //将fp所指向的文件中的内容赋给p 
+		   if(n==1)
+		   {
+		      head=p;
+		      p2=p;
+		    }
+		    else             //创建链表 
+		    {
+		    	p2->next=p;
+		    	p2=p;
+			}
 	    }
-	    else             //创建链表 
-	    {
-	    	p2->next=p;
-	    	p2=p;
-		}
-    }
-    p2->next=NULL;
+	    p2->next=NULL;
+	}
     fclose(fp);    //关闭文件 
     return head;   //返回头指针 
 }
@@ -110,7 +119,7 @@ void menu()     //菜单
 {
 	system("cls");    //清屏  
 	do{
-		color(6);     //看着舒服的颜色
+		color(14);     //看着舒服的颜色
 		char t;
 		toxy(50,5);
 		printf(" 自动存取款机模拟系统");
@@ -121,22 +130,25 @@ void menu()     //菜单
 		toxy(48,10);
 		printf("|     2.转账          |");
 		toxy(48,12);
-		printf("|     3.查询          |");
+		printf("|     3.余额          |");
 		toxy(48,14);
-		printf("|     4.存款          |");
+		printf("|     4.明细          |");
 		toxy(48,16);
-		printf("|     5.修改密码      |"); 
+		printf("|     5.存款          |");
 		toxy(48,18);
-		printf("|     6.退出系统      |");
+		printf("|     6.修改密码      |"); 
+		toxy(48,20);
+		printf("|     7.退出系统      |");
 		t=getch();                    //利用不回显函数，输入t，可以不用手动按回车键 
 		switch(t)
 		{
 			case '1':get_money();break; 
 			case '2':transfer_money();break;
 			case '3':find_money();break;
-			case '4':add_money();break;
-			case '5':amend_password();break;
-			case '6':over();break;
+			case '4':list();break; 
+			case '5':add_money();break;
+			case '6':amend_password();break;
+			case '7':over();break;
 			default :;break;
 		}
     }while(1);       //永远为真 
@@ -311,11 +323,11 @@ void login()        //注册账号
 {
 	
 	system("cls");
-	color(5); 
+	color(10); 
 	Accp p1;
 	p1=(Accp)malloc(N);     //向内存申请一段空间 
 	do{
-		color(5);
+		color(10);
 		char name[20],password[18],againpassword[18],c,k;
 		int i=0;; 
 		toxy(50,5);
@@ -463,7 +475,7 @@ void amend_password()        //修改密码
     	char password[18],newpassword[18],t,k;
     	int i=0;
     	toxy(50,5);          //将光标移动到坐标为（50，5）的位置 
-		printf("个人财务管理软件");
+		printf("自动存取款机模拟系统");
 		toxy(50,8);
 		printf("修改密码");
 		toxy(48,10);
@@ -615,11 +627,17 @@ void add_money()       //存款
 		color(11);
 		monp p;
 		char t; 
+		char time[10],date[10];
 		p=(monp)malloc(M);   //向内存申请一段空间 
 		toxy(48,8);
 		printf("请输入您需要存入的金额：");
 		scanf("%f",&p->money);
 		getchar(); //吸收回车键 
+		_tzset(); 
+        _strtime(time);      
+        strcpy(p->time,time);
+        _strdate(date);
+		strcpy(p->date,date);   
 		toxy(48,10);
 		printf("正在操作，请稍后....");
 		Sleep(500);
@@ -657,7 +675,7 @@ void find_money()     //查询余额
 	system("cls");
 	color(13);
 	float sum=0;
-	sum=Sum();   //调用函数 
+	sum=Sum();
 	toxy(46,12);
 	printf("余额为：%f",sum);
 	toxy(46,16);
@@ -675,9 +693,10 @@ void get_money()      //取款
 		monp p;
 		float money,sum;
 		char t;
+		char time[10],date[10];
 		toxy(46,12);
 		printf("请输入您要取的金额：");
-		scanf("%f",&money);
+		scanf("%f",&money); 
 		getchar();//吸收回车键 
 		sum=Sum();
 		if(money>sum)   //如果要取的金额大于余额 
@@ -688,6 +707,11 @@ void get_money()      //取款
 			continue;    //结束本次循环 
 		}
 		p=(monp)malloc(M);    //向内存申请一段空间 
+		_tzset(); 
+        _strtime(time);      
+        strcpy(p->time,time);
+        _strdate(date);
+		strcpy(p->date,date);  
 		p->money=-money;
 		save_money(p);      
 		toxy(46,14);
@@ -722,16 +746,55 @@ void get_money()      //取款
 	
 }
 
+void list()  //明细 
+{
+	system("cls");
+	color(10);
+	monp head,p;
+	int i=10;
+	head=ss();
+	p=head;
+	toxy(50,5);
+	printf(" 自动存取款机模拟系统");
+	toxy(54,6);
+	printf("账单明细");
+	toxy(30,7);
+	printf("-------------------------------------------------------------");
+	toxy(31,8);
+	printf("金       额              时       间             日      期");
+	toxy(30,9);
+	printf("-------------------------------------------------------------");
+	while(p!=NULL)
+	{
+		toxy(30,i);
+		if(p->money>=0)
+		{
+			printf("+%f                %-24s%s",p->money,p->time,p->date);
+		}
+		else
+		{
+			printf("%f                %-24s%s",p->money,p->time,p->date);
+		}
+		p=p->next;
+		i++;
+	}
+	toxy(50,i);
+	printf("请按任意键返回主菜单");
+	getch();
+	menu();
+}
+
 void transfer_money()     //转账 
 {
 	do
 	{
 		system("cls");
-		color(9);
+		color(10);
 		FILE *fp1;
 		monp p,head,p1;
 		float money,sum=0;
 		char name[20],t;
+		char time[10],date[10];
 		toxy(46,12);
 		printf("请输入您要转入的账号：");
 		gets(name);
@@ -747,24 +810,34 @@ void transfer_money()     //转账
 			Sleep(500);
 			continue;   //结束本次循环 
 		 } 
-		fp1=fopen(name,"ab");    //以追加的方式打开名字为name的二进制文件 
+		fp1=fopen(name,"rb");    //以只读的方式打开名字为name的二进制文件  
 		if(fp1==NULL)    //如果文件不存在 
 		{
 			toxy(46,16);
 			printf("账户不存在！");
+			fclose(fp1);
 			Sleep(500);
-			continue;    
+			continue;
 		}
+		fp1=fopen(name,"ab");    //以追加的方式打开名字为name的二进制文件  
 		p=(monp)malloc(M);  //向内存申请一段空间 
 		p->money=-money;
+		_tzset(); 
+        _strtime(time);      
+        strcpy(p->time,time);
+        _strdate(date);
+		strcpy(p->date,date);  
 		save_money(p);
 		p1=(monp)malloc(M);
 		p1->money=money;
+		strcpy(p1->time,time);
+		strcpy(p1->date,date);
 		if(fwrite(p1,M,1,fp1)!=1)    //将p1所指向的一个大小为M的节点 存入fp1所指向的文件中 
 		{
 			printf("转账失败，请重试！");
 			continue;
 		}
+		fclose(fp1);
 		toxy(46,18);
 		printf("正在操作，请稍后....");
 		Sleep(500);
@@ -797,42 +870,58 @@ void transfer_money()     //转账
 	}while(1);
 }
 
-float Sum()    //求余额 
+float Sum()
 {
-	FILE *fp;   //文件指针 
-	monp p,head,p2;
-	int n=0;
+	monp head=NULL,p;
 	float sum=0;
-	fp=fopen(_name,"rb");   //以只读的方式打开名字为_name的二进制文件 
-	if(fp==NULL)
-	{
-		printf("cannot open file");
-	}
-	while(!feof(fp))  //判断标记是否移动到文件末尾 
-	{
-		n++;
-		p=(monp)malloc(M);   //向内存申请一段空间 
-		fread(p,M,1,fp);     //将fp所指向的文件中的一段大小为M的 内容赋给p 
-		if(n==1)
-		{
-			head=p;
-			p2=p;
-		}
-		else                //创建链表 
-		{
-			p2->next=p;
-			p2=p;
-		}
-		p2->next=NULL;
-	}
-	fclose(fp);     //关闭文件 
-	p=head;          //使p重新指向头结点 
+	head=ss();
+	p=head;
 	while(p!=NULL)
 	{
 		sum+=p->money;    //求和 
 		p=p->next;
 	}
-	return(sum);    //返回sum值 
+	if(head==NULL)
+		sum=0;
+	return sum;
+}
+
+monp ss()    //求余额 
+{
+	FILE *fp;   //文件指针 
+	monp p,head=NULL,p2,pre=NULL;
+	int n=0;
+	//float sum=0;
+	fp=fopen(_name,"ab+");   //以只读的方式打开名字为_name的二进制文件 
+	if(fp==NULL)
+	{
+		printf("cannot open file");
+	}
+	else
+	{
+		while(!feof(fp))  //判断标记是否移动到文件末尾 
+		{
+			n++;
+			p=(monp)malloc(M);   //向内存申请一段空间 
+			fread(p,M,1,fp);     //将fp所指向的文件中的一段大小为M的 内容赋给p 
+			if(n==1)
+			{
+				head=p;
+				p2=p;
+			}
+			else                //创建链表 
+			{
+				pre=p2;
+				p2->next=p;
+				p2=p;
+			}
+			p2->next=NULL;
+		}
+	}
+	fclose(fp);     //关闭文件 
+	if(pre!=NULL)
+		pre->next=NULL;
+	return(head);    //返回sum值 
 }
 
 void save_money(monp p)    //将p所指向的内容存入文件中 
