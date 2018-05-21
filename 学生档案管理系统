@@ -243,8 +243,8 @@ passw ff()     //将文件中的内容读入链表，返回值为表头地址
 	//printf("%p\n",password_head);
 	password_head=(passw)malloc(M);   //申请空间 
 	strcpy(password_head->password," ");  //初始化密码 
-	//printf("%p\n",password_head);
-	fread(password_head,M,1,fp);   //将password_head所指向的一段大小为M的内容存入fp所指向的文件中 
+	//printf("%s\n",password_head);
+	fread(password_head,M,1,fp);   
 	fclose(fp);    //关闭文件 
 	return password_head;   //返回值表头地址 
 }
@@ -789,7 +789,7 @@ void delete_number()  //按学号查询删除
 		char number[10];
 		char t,c;
 		int i=11,j=0;
-		Stup head,p,pre;
+		Stup head,p,pre=NULL ;
 		FILE *fp;
 		toxy(48,9);
 		printf("请输入你要删除的学生的学号：");
