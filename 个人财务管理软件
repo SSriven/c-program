@@ -61,7 +61,7 @@ void save_information(IAEP p); //保存信息
 char _name[20],_password[18];       //全局变量记住当前登陆账户 
 
 
-void color(short x)
+/*void color(short x)
 {
 	if(x>=0&&x<=15)
 	{
@@ -71,7 +71,7 @@ void color(short x)
 	{
 		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),x);
 	}
-} 
+} */
 
 void HideCursor()     //隐藏光标
 {
@@ -92,28 +92,31 @@ Accp ff()               //将存账号的文件里的内容输出到链表中
 	int n=0;
 	Accp head=NULL;
 	Accp p2,p;
-	fp=fopen("account","r");     //以只读的方式打开文件 
+	fp=fopen("account","a+");     //以只读的方式打开文件 
 	if(fp==NULL)
 	{
 		printf("cannot open file\n");
 	}
-	while(!feof(fp))        //判断文件位置标志是否移动到文件末尾 
+	else
 	{
-	   n++;
-	   	p=(Accp)malloc(N);
-	   fread(p,N,1,fp);
-	   if(n==1)
-	   {
-	      head=p;
-	      p2=p;
+		while(!feof(fp))        //判断文件位置标志是否移动到文件末尾 
+		{
+		   n++;
+		   	p=(Accp)malloc(N);
+		   fread(p,N,1,fp);
+		   if(n==1)
+		   {
+		      head=p;
+		      p2=p;
+		    }
+		    else             //创建链表 
+		    {
+		    	p2->next=p;
+		    	p2=p;
+			}
 	    }
-	    else             //创建链表 
-	    {
-	    	p2->next=p;
-	    	p2=p;
-		}
-    }
-    p2->next=NULL;
+	    p2->next=NULL;
+	}
     fclose(fp);
     return head;
 }
@@ -163,7 +166,7 @@ void signin()       //登陆或注册
 	system("cls");
 	HideCursor();    //隐藏光标
 	char t;
-	color(2);
+	system("color 72");
 	toxy(50,5);
 	printf("个人财务管理软件");
 	toxy(44,8);
@@ -192,7 +195,7 @@ void logon()      // 账号登陆
 	head=ff();
     do{
     	HideCursor();       //隐藏光标 
-    	color(12);
+    	system("color 72");
 	    p=head;
 	    char t,c,k;
 	    int i=0;
@@ -333,7 +336,7 @@ void login()        //注册账号
 	p1=(Accp)malloc(N);     //向内存申请一段空间 
 	do{
 		HideCursor();
-		color(11);
+		system("color 72");
 		char name[20],password[18],againpassword[18],c,k;
 		int i=0;; 
 		toxy(50,5);
@@ -622,43 +625,47 @@ void save_account(Accp p1)     //将p1所指向的内容存储到文件中
 	}
 	fclose(fp);        //关闭文件 
 }
-
 IAEP ss()             //将存账单的文件里的内容输出到链表中 
 {
 	FILE *fp;              //文件指针
 	int n=0; 
 	IAEP head=NULL;
 	IAEP p,p2,pr=NULL;
-	fp=fopen(_name,"rb");//打开文件，方式为只读 
+	fp=fopen(_name,"ab+");//打开文件，方式为只读 
 	if(fp==NULL)            //如果打开为空 
 	{
 		printf("cannot open file\n");
 	}
-	while(!feof(fp))         // feof函数可以检查文件读写位置标志是否移动到文件末尾，feof(fp)检查fp所指向的文件是否结束，如果是 
-	{                        //则函数值为真，否则为假，即“!feof(fp)”为真，在while循环中检查 “!feof(fp)”为真，就执行循环体 
-	   n++;
-	   p=(IAEP)malloc(M);   //向内存申请一段空间 
-	   fread(p,M,1,fp);      //从fp所指向的文件读入1个大小为M的数据，存储到p所指向的空间中 
-	   if(n==1) 
-	   {
-	      head=p;
-	      p2=p;
-	      head->pre=NULL;
-	      
+	else
+	{
+		while(!feof(fp))         // feof函数可以检查文件读写位置标志是否移动到文件末尾，feof(fp)检查fp所指向的文件是否结束，如果是 
+		{                        //则函数值为真，否则为假，即“!feof(fp)”为真，在while循环中检查 “!feof(fp)”为真，就执行循环体 
+		   n++;
+		   p=(IAEP)malloc(M);   //向内存申请一段空间 
+		   fread(p,M,1,fp);      //从fp所指向的文件读入1个大小为M的数据，存储到p所指向的空间中 
+		   if(n==1) 
+		   {
+		      head=p;
+		      p2=p;
+		      head->pre=NULL;
+		      
+		    }
+		    else                //创建双向链表 
+		    {
+		    	pr=p2;          //pr是p的前驱结点 
+		    	p->pre=p2;
+		    	p2->next=p;
+		    	p2=p;
+			}
 	    }
-	    else                //创建双向链表 
+	    if(pr!=NULL)
 	    {
-	    	pr=p2;          //pr是p的前驱结点 
-	    	p->pre=p2;
-	    	p2->next=p;
-	    	p2=p;
+		    pr->next=NULL;
 		}
-    }
-    if(pr!=NULL)
-    {
-	    pr->next=NULL;
 	}
 	fclose(fp);
+	if(n==1)
+		head=NULL;
 	return head;
  }
  
@@ -734,7 +741,7 @@ void print_information()     //输出账单
 	float sum=0,sum1=0,sum2=0;
 	IAEP head=NULL;
 	IAEP p,p2,pr=NULL;
-	fp=fopen(_name,"rb");//打开文件，方式为只读 
+	fp=fopen(_name,"ab+");//打开文件，方式为只读 
 	if(fp==NULL)            //如果打开为空 
 	{
 		printf("cannot open file\n");
@@ -818,7 +825,7 @@ void find_information()     //查找信息
 	int i=15;
 	char t;
 	int year,month,day;
-	IAEP p;
+	IAEP p=NULL;
 	p=ss();
 	toxy(50,5);
 	printf("个人账户管理软件");
@@ -835,17 +842,21 @@ void find_information()     //查找信息
 	printf("时     间          金   额                 收入来源或支出目的");
 	toxy(30,14);
 	printf("----------------------------------------------------------------");
-	while(p!=NULL)
+	if(p!=NULL)
 	{
-		if(p->year==year&&p->month==month&&p->day==day)
+		//printf("\n%s\n",p->source_or_aim);
+		while(p!=NULL)
 		{
-			toxy(30,i);
-		    printf("%d.%d.%-12d%c%-24f%s\n",p->year,p->month,p->day,p->ch,p->iae,p->source_or_aim);
-		    i++;
+			if(p->year==year&&p->month==month&&p->day==day)
+			{
+				toxy(30,i);
+			    printf("%d.%d.%-12d%c%-24f%s\n",p->year,p->month,p->day,p->ch,p->iae,p->source_or_aim);
+			    i++;
+			}
+			p=p->next;
 		}
-		p=p->next;
 	}
-	if(i==15)
+	else if(p==NULL)
 	{
 		toxy(50,i);
 		printf("没有找到相应的信息~");
